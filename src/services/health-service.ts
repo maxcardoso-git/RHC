@@ -99,8 +99,10 @@ export class HealthService {
 
     const status: ResourceHealthStatus = {
       resource_id: resourceId,
+      resource_name: resource.name,
       resource_type: resource.type,
       resource_subtype: resource.subtype,
+      env: resource.env,
       current_status: check.final_status,
       last_check_at: check.executed_at,
       last_success_at: check.final_status === 'UP' ? check.executed_at : existing?.last_success_at,

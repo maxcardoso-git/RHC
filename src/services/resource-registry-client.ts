@@ -32,11 +32,14 @@ export class ResourceRegistryClient {
     return this.cfg.resourceRegistry.baseUrl.replace(/\/$/, '');
   }
 
-  private mapType(raw: string, subtype?: string | null): ResourceType {
+  private mapType(raw: string, subtype?: string | null, name?: string | null): ResourceType {
     const upperType = (raw || '').toUpperCase();
     const upperSubtype = (subtype || '').toUpperCase();
+    const upperName = (name || '').toUpperCase();
     if (upperType === 'DB') return 'database';
     if (upperType === 'CACHE' || upperType === 'QUEUE') return 'cache_queue';
+    if (upperSubtype.includes('REDIS') || upperName.includes('REDIS')) return 'cache_queue';
+    if (upperSubtype.includes('KAFKA') || upperName.includes('KAFKA')) return 'cache_queue';
     if (upperType === 'HTTP') {
       if (upperSubtype === 'LLM') return 'llm_provider';
       if (upperSubtype === 'VECTOR_LAYER' || upperSubtype === 'VECTOR_ENGINE') return 'vector_db';
@@ -48,8 +51,12 @@ export class ResourceRegistryClient {
     return 'http_service';
   }
 
-  private mapSubtype(raw?: string | null): ResourceSubtype | undefined {
+  private mapSubtype(raw?: string | null, name?: string | null): ResourceSubtype | undefined {
     const value = (raw || '').toLowerCase();
+    const nameValue = (name || '').toLowerCase();
+    if (value === 'postgresql' || nameValue.includes('postgres')) return 'postgres';
+    if (value.includes('redis') || nameValue.includes('redis')) return 'redis';
+    if (value.includes('kafka') || nameValue.includes('kafka')) return 'kafka';
     const allowed: ResourceSubtype[] = [
       'postgres',
       'mongo',
@@ -133,8 +140,8 @@ export class ResourceRegistryClient {
   }
 
   private toDescriptor(raw: OrchestratorResource): ResourceDescriptor {
-    const type = this.mapType(raw.type, raw.subtype);
-    const subtype = this.mapSubtype(raw.subtype);
+    const type = this.mapType(raw.type, raw.subtype, raw.name);
+    const subtype = this.mapSubtype(raw.subtype, raw.name);
     const enabled = raw.isActive ?? true;
     const schedule = raw.healthCheckSchedule || 'PT10M';
     const descriptor: ResourceDescriptor = {

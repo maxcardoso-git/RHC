@@ -206,8 +206,8 @@
       }
       const rows = items.map(item => `
         <tr data-id=\"${item.resource_id}\">
-          <td>${item.resource_id}</td>
-          <td>${item.resource_type}</td>
+          <td><div style=\"font-weight:700;\">${item.resource_name || item.resource_id}</div><div class=\"muted small\">${item.resource_id}</div></td>
+          <td>${item.resource_type}${item.env ? ` / ${item.env}` : ''}</td>
           <td>${item.resource_subtype || '-'}</td>
           <td>${statusPill(item.current_status)}</td>
           <td>${item.summary?.message || '-'}</td>
@@ -218,7 +218,7 @@
         <table>
           <thead>
             <tr>
-              <th>Recurso</th><th>Tipo</th><th>Subtype</th><th>Status</th><th>Resumo</th><th>Atualizado</th>
+              <th>Recurso / ID</th><th>Tipo / Env</th><th>Subtype</th><th>Status</th><th>Resumo</th><th>Atualizado</th>
             </tr>
           </thead>
           <tbody>${rows}</tbody>

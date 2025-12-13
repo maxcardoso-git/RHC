@@ -96,8 +96,10 @@ export interface ResourceDescriptor {
 
 export interface ResourceHealthStatus {
   resource_id: string;
+  resource_name?: string;
   resource_type: ResourceType;
   resource_subtype?: ResourceSubtype;
+  env?: string;
   current_status: HealthStatus;
   last_check_at?: string;
   last_success_at?: string;
