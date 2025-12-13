@@ -29,7 +29,7 @@ export function loadConfig(): AppConfig {
     apiKey: process.env.INTERNAL_API_KEY,
     defaultLocale: (process.env.DEFAULT_LOCALE as Locale) || DEFAULT_LOCALE,
     resourceRegistry: {
-      baseUrl: process.env.RESOURCE_REGISTRY_BASE_URL || 'http://localhost:4000',
+      baseUrl: process.env.RESOURCE_REGISTRY_BASE_URL || 'http://localhost:3000/api/v1/orchestrator',
       apiKey: process.env.RESOURCE_REGISTRY_API_KEY,
       cacheSeconds: parseInt(process.env.RESOURCE_REGISTRY_CACHE_SECONDS || '30', 10)
     },
