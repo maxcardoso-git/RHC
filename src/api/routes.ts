@@ -1,9 +1,9 @@
 import { FastifyInstance } from 'fastify';
 import { METRIC_CATALOG } from '../domain/catalog.js';
 import { Locale } from '../domain/types.js';
-import { healthService } from '../services/health-service.js';
-import { memoryStore } from '../stores/memory-store.js';
 import { pickLocale } from '../i18n/index.js';
+import { HealthService } from '../services/health-service.js';
+import { ResourceRegistryClient } from '../services/resource-registry-client.js';
 
 function pickUserLocale(header?: string | string[]): Locale | undefined {
   if (!header) return undefined;
@@ -19,13 +19,21 @@ function localizeSummary(locale: Locale | undefined, summary: any) {
   return summary;
 }
 
-export async function registerRoutes(app: FastifyInstance) {
+export async function registerRoutes(
+  app: FastifyInstance,
+  deps: { healthService: HealthService; registryClient: ResourceRegistryClient }
+) {
   const base = '/api/v1/resource-health';
 
   app.post(`${base}/check/:resource_id`, async (request, reply) => {
     const resourceId = (request.params as { resource_id: string }).resource_id;
     try {
-      const check = await healthService.runCheck(resourceId, 'MANUAL');
+      const resource = await deps.registryClient.getResource(resourceId);
+      if (!resource) {
+        reply.code(404).send({ code: 'RESOURCE_NOT_FOUND' });
+        return;
+      }
+      const check = await deps.healthService.runCheck(resourceId, 'MANUAL', resource);
       reply.code(202).send({
         check_id: check.id,
         resource_id: check.resource_id,
@@ -48,7 +56,7 @@ export async function registerRoutes(app: FastifyInstance) {
   app.get(`${base}/status/:resource_id`, async (request, reply) => {
     const resourceId = (request.params as { resource_id: string }).resource_id;
     const locale = pickUserLocale(request.headers['accept-language']);
-    const status = healthService.getStatus(resourceId);
+    const status = deps.healthService.getStatus(resourceId);
     if (!status) {
       reply.code(404).send({ code: 'RESOURCE_NOT_FOUND' });
       return;
@@ -59,7 +67,7 @@ export async function registerRoutes(app: FastifyInstance) {
   app.get(`${base}/status`, async (request, reply) => {
     const query = request.query as Record<string, string | undefined>;
     const locale = pickUserLocale(request.headers['accept-language']);
-    const items = healthService.listStatus({
+    const items = deps.healthService.listStatus({
       type: query.type,
       subtype: query.subtype,
       status: query.status as any,
@@ -81,13 +89,13 @@ export async function registerRoutes(app: FastifyInstance) {
     const query = request.query as Record<string, string | undefined>;
     const limit = query.limit ? parseInt(query.limit, 10) : 20;
     const offset = query.offset ? parseInt(query.offset, 10) : 0;
-    const { items, total } = healthService.listChecks(resourceId, limit, offset);
+    const { items, total } = deps.healthService.listChecks(resourceId, limit, offset);
     reply.send({ items, paging: { limit, offset, total } });
   });
 
   app.get(`${base}/checks/:check_id`, async (request, reply) => {
     const checkId = (request.params as { check_id: string }).check_id;
-    const check = healthService.getCheck(checkId);
+    const check = deps.healthService.getCheck(checkId);
     if (!check) {
       reply.code(404).send({ code: 'CHECK_NOT_FOUND' });
       return;
@@ -100,6 +108,7 @@ export async function registerRoutes(app: FastifyInstance) {
   });
 
   app.get(`${base}/resources`, async (_request, reply) => {
-    reply.send({ items: memoryStore.listResources() });
+    const items = await deps.registryClient.listResources();
+    reply.send({ items });
   });
 }

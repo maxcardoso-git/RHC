@@ -1,7 +1,8 @@
 import { AppConfig } from '../config/index.js';
 import { memoryStore } from '../stores/memory-store.js';
-import { healthService } from '../services/health-service.js';
+import { HealthService } from '../services/health-service.js';
 import { logger } from '../utils/logger.js';
+import { ResourceRegistryClient } from '../services/resource-registry-client.js';
 
 function parseIntervalSeconds(value: string): number {
   // Minimal ISO-8601 duration parser supporting minutes/seconds: PT10M, PT30S
@@ -19,7 +20,7 @@ function jitter(maxSeconds: number): number {
 export class Scheduler {
   private timer: NodeJS.Timeout | null = null;
 
-  constructor(private cfg: AppConfig) {}
+  constructor(private cfg: AppConfig, private registryClient: ResourceRegistryClient, private healthService: HealthService) {}
 
   start() {
     if (this.timer) return;
@@ -36,7 +37,8 @@ export class Scheduler {
   }
 
   private async loop() {
-    const resources = memoryStore.listResources().filter((r) => r.enabled && r.policy?.enabled);
+    const resources = (await this.registryClient.listResources()).filter((r) => r.enabled && r.policy?.enabled);
+    memoryStore.setResources(resources);
     for (const res of resources) {
       const policy = res.policy!;
       if (policy.schedule.type !== 'INTERVAL') continue;
@@ -48,7 +50,7 @@ export class Scheduler {
         continue;
       }
       try {
-        await healthService.runCheck(res.id, 'SCHEDULED');
+        await this.healthService.runCheck(res.id, 'SCHEDULED', res);
       } catch (err) {
         logger.error({ err, resourceId: res.id }, 'scheduled check failed');
       }

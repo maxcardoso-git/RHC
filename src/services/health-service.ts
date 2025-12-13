@@ -2,22 +2,31 @@ import { v4 as uuid } from 'uuid';
 import { runCollector } from '../collectors/index.js';
 import { evaluateRules } from '../rules/rule-engine.js';
 import { memoryStore } from '../stores/memory-store.js';
-import { pickLocale, i18nMessages } from '../i18n/index.js';
+import { i18nMessages } from '../i18n/index.js';
 import {
   ExecutionType,
   HealthPolicy,
   HealthStatus,
   ResourceHealthCheck,
-  ResourceHealthStatus
+  ResourceHealthStatus,
+  ResourceDescriptor
 } from '../domain/types.js';
 import { logger } from '../utils/logger.js';
+import { ResourceRegistryClient } from './resource-registry-client.js';
 
 export class HealthService {
-  async runCheck(resourceId: string, executionType: ExecutionType): Promise<ResourceHealthCheck> {
-    const resource = memoryStore.getResource(resourceId);
+  constructor(private registryClient: ResourceRegistryClient) {}
+
+  async runCheck(
+    resourceId: string,
+    executionType: ExecutionType,
+    resourceOverride?: ResourceDescriptor
+  ): Promise<ResourceHealthCheck> {
+    const resource = resourceOverride || (await this.registryClient.getResource(resourceId));
     if (!resource) {
       throw new Error('RESOURCE_NOT_FOUND');
     }
+    memoryStore.upsertResource(resource);
     const policy = resource.policy;
     if (!policy || !policy.enabled) {
       throw new Error('POLICY_DISABLED');
@@ -49,7 +58,7 @@ export class HealthService {
       };
 
       memoryStore.addCheck(check);
-      this.persistStatusFromCheck(resourceId, policy, check, ruleFailed);
+      this.persistStatusFromCheck(resourceId, policy, resource, check, ruleFailed);
       return check;
     } catch (err) {
       errorMessage = err instanceof Error ? err.message : 'Unknown collector error';
@@ -65,13 +74,19 @@ export class HealthService {
         error_message: errorMessage
       };
       memoryStore.addCheck(check);
-      this.persistStatusFromCheck(resourceId, policy, check, ruleFailed);
+      this.persistStatusFromCheck(resourceId, policy, resource, check, ruleFailed);
       logger.error({ err, resourceId }, 'collector failed');
       return check;
     }
   }
 
-  private persistStatusFromCheck(resourceId: string, policy: HealthPolicy, check: ResourceHealthCheck, failedRules: string[]) {
+  private persistStatusFromCheck(
+    resourceId: string,
+    policy: HealthPolicy,
+    resource: ResourceDescriptor,
+    check: ResourceHealthCheck,
+    failedRules: string[]
+  ) {
     const existing = memoryStore.getStatus(resourceId);
     const nextFailures = check.final_status === 'UP' ? 0 : (existing?.consecutive_failures || 0) + 1;
     const summaryMessage = this.getSummaryMessage(check.final_status);
@@ -79,15 +94,13 @@ export class HealthService {
       message: summaryMessage,
       primary_cause: failedRules.length ? failedRules[0] : undefined,
       failed_rules: failedRules,
-      key_metrics: Object.fromEntries(
-        Object.entries(check.metrics || {}).slice(0, 3) // keep short preview
-      )
+      key_metrics: Object.fromEntries(Object.entries(check.metrics || {}).slice(0, 3))
     };
 
     const status: ResourceHealthStatus = {
       resource_id: resourceId,
-      resource_type: memoryStore.getResource(resourceId)!.type,
-      resource_subtype: memoryStore.getResource(resourceId)!.subtype,
+      resource_type: resource.type,
+      resource_subtype: resource.subtype,
       current_status: check.final_status,
       last_check_at: check.executed_at,
       last_success_at: check.final_status === 'UP' ? check.executed_at : existing?.last_success_at,
@@ -132,5 +145,3 @@ export class HealthService {
     return memoryStore.getCheck(checkId);
   }
 }
-
-export const healthService = new HealthService();

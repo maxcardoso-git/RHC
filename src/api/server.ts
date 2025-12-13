@@ -5,8 +5,10 @@ import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { AppConfig } from '../config/index.js';
 import { registerRoutes } from './routes.js';
+import { HealthService } from '../services/health-service.js';
+import { ResourceRegistryClient } from '../services/resource-registry-client.js';
 
-export function buildServer(cfg: AppConfig) {
+export function buildServer(cfg: AppConfig, deps: { healthService: HealthService; registryClient: ResourceRegistryClient }) {
   const app = Fastify({ logger: true });
 
   app.register(cors, { origin: false });
@@ -32,7 +34,9 @@ export function buildServer(cfg: AppConfig) {
 
   app.get('/healthz', async () => ({ status: 'ok', service: cfg.serviceName }));
 
-  app.register(registerRoutes);
+  app.register((instance, _opts, done) => {
+    registerRoutes(instance, deps).then(() => done()).catch(done);
+  });
 
   return app;
 }

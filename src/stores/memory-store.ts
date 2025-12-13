@@ -1,6 +1,4 @@
-import { initialStatus, sampleResources } from '../data/sample.js';
 import {
-  ExecutionType,
   HealthStatus,
   ResourceDescriptor,
   ResourceHealthCheck,
@@ -12,13 +10,19 @@ export class MemoryStore {
   private status = new Map<string, ResourceHealthStatus>();
   private checks: ResourceHealthCheck[] = [];
 
-  constructor() {
-    sampleResources.forEach((res) => this.resources.set(res.id, res));
-    initialStatus.forEach((st) => this.status.set(st.resource_id, st));
+  constructor() {}
+
+  setResources(resources: ResourceDescriptor[]): void {
+    this.resources.clear();
+    resources.forEach((res) => this.resources.set(res.id, res));
   }
 
   listResources(): ResourceDescriptor[] {
     return Array.from(this.resources.values());
+  }
+
+  upsertResource(resource: ResourceDescriptor): void {
+    this.resources.set(resource.id, resource);
   }
 
   getResource(id: string): ResourceDescriptor | undefined {

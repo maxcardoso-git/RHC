@@ -7,6 +7,11 @@ export interface AppConfig {
   port: number;
   apiKey?: string;
   defaultLocale: Locale;
+  resourceRegistry: {
+    baseUrl: string;
+    apiKey?: string;
+    cacheSeconds: number;
+  };
   scheduler: {
     loopIntervalSeconds: number;
     jitterMaxSeconds: number;
@@ -23,6 +28,11 @@ export function loadConfig(): AppConfig {
     port: parseInt(process.env.PORT || '3000', 10),
     apiKey: process.env.INTERNAL_API_KEY,
     defaultLocale: (process.env.DEFAULT_LOCALE as Locale) || DEFAULT_LOCALE,
+    resourceRegistry: {
+      baseUrl: process.env.RESOURCE_REGISTRY_BASE_URL || 'http://localhost:4000',
+      apiKey: process.env.RESOURCE_REGISTRY_API_KEY,
+      cacheSeconds: parseInt(process.env.RESOURCE_REGISTRY_CACHE_SECONDS || '30', 10)
+    },
     scheduler: {
       loopIntervalSeconds: parseInt(process.env.SCHEDULER_LOOP_SECONDS || '30', 10),
       jitterMaxSeconds: parseInt(process.env.SCHEDULER_JITTER_MAX_SECONDS || '30', 10)

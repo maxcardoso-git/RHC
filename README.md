@@ -14,10 +14,13 @@ npm install
 npm run dev
 # API em http://localhost:3000, scheduler ativo
 ```
-Variáveis de ambiente opcionais:
+Variáveis de ambiente:
 - `PORT` (padrão 3000)
 - `INTERNAL_API_KEY` (se definido, valida `X-Internal-Api-Key`)
 - `DEFAULT_LOCALE` (pt-BR|en-US|es-ES)
+- `RESOURCE_REGISTRY_BASE_URL` (ex.: http://resource-registry:8080)
+- `RESOURCE_REGISTRY_API_KEY` (opcional, para `X-Internal-Api-Key` no RR)
+- `RESOURCE_REGISTRY_CACHE_SECONDS` (padrão 30; cache simples da lista)
 - `SCHEDULER_LOOP_SECONDS` (padrão 30)
 - `SCHEDULER_JITTER_MAX_SECONDS` (padrão 30)
 - `LOG_LEVEL` (padrão info)
@@ -29,7 +32,7 @@ Variáveis de ambiente opcionais:
 - `GET /history/:resource_id` — histórico de checks (paginado).
 - `GET /checks/:check_id` — detalhe de uma execução.
 - `GET /schema/metrics` — catálogo de métricas por tipo de recurso.
-- `GET /resources` — catálogo simulado vindo do Resource Registry.
+- `GET /resources` — catálogo vindo do Resource Registry.
 
 Use o header `Accept-Language` (`pt-BR`, `en-US`, `es-ES`) para mensagens localizadas. Quando `INTERNAL_API_KEY` estiver definido, inclua `X-Internal-Api-Key` no request.
 
@@ -60,7 +63,7 @@ docker run -d --restart unless-stopped -p 3000:3000 \
 
 ## O que já está implementado
 - Contratos de domínio: métricas, políticas, regras e tipos de recurso do PRD.
-- Catálogo de métricas por tipo e recursos/policies de exemplo.
+- Integração com Resource Registry (REST) para listar recursos/policies; sem mocks. Cache leve controlado por env.
 - Rule engine `worst_of` com operadores básicos.
 - Collectors simulados por tipo de recurso (latências e valores sintéticos).
 - Scheduler pull-based com intervalos ISO-8601 simples (PT10M), jitter e filtragem de recursos habilitados.
