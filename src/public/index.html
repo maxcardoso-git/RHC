@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Resource Health Checker</title>
+  <link rel="icon" type="image/png" href="/ui/logo.png" />
   <style>
     :root {
       --bg: #0f172a;
@@ -41,6 +42,13 @@
       display: flex;
       align-items: center;
       gap: 10px;
+    }
+    .logo {
+      width: 38px;
+      height: 38px;
+      object-fit: contain;
+      filter: drop-shadow(0 0 6px rgba(34, 211, 238, 0.3));
+      border-radius: 8px;
     }
     .pill {
       padding: 6px 12px;
@@ -119,7 +127,7 @@
 </head>
 <body>
   <header>
-    <div class="title">Resource Health Checker <span class="pill">LIVE</span></div>
+    <div class="title"><img src="/ui/logo.png" alt="RHC logo" class="logo" />Resource Health Checker <span class="pill">LIVE</span></div>
     <div class="flex small">
       <label for="locale">Idioma</label>
       <select id="locale">
