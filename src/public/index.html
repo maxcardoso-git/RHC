@@ -154,6 +154,20 @@
         <button id="apply-filters" class="secondary">Filtrar</button>
       </div>
       <div id="table-container"></div>
+      <div class="flex small" style="justify-content: space-between; margin-top:8px;">
+        <div id="page-info" class="muted">Página 1</div>
+        <div class="flex" style="gap:6px;">
+          <label for="page-size" class="muted">Linhas</label>
+          <select id="page-size">
+            <option value="5">5</option>
+            <option value="10" selected>10</option>
+            <option value="20">20</option>
+            <option value="50">50</option>
+          </select>
+          <button id="prev-page" class="secondary">Anterior</button>
+          <button id="next-page" class="secondary">Próxima</button>
+        </div>
+      </div>
       <div id="error" class="error small"></div>
     </section>
     <section class="card">
@@ -166,6 +180,11 @@
     const API_BASE = '/api/v1/resource-health';
     let autoInterval = null;
     let selected = null;
+    let itemsCache = [];
+    let sortKey = null;
+    let sortDir = 'asc';
+    let currentPage = 1;
+    let pageSize = 10;
 
     function updateTypeOptions(items) {
       const select = document.getElementById('filter-type');
@@ -204,15 +223,60 @@
       const params = new URLSearchParams();
       if (statusFilter) params.set('status', statusFilter);
       if (typeFilter) params.set('type', typeFilter);
+      params.set('limit', '500');
       try {
         document.getElementById('error').textContent = '';
         const data = await fetchJSON(`${API_BASE}/status?${params.toString()}`);
-        const items = data.items || [];
-        updateTypeOptions(items);
-        renderTable(items);
+        itemsCache = data.items || [];
+        updateTypeOptions(itemsCache);
+        currentPage = 1;
+        renderTable(applyPaging(applySorting(itemsCache)));
       } catch (e) {
         document.getElementById('error').textContent = 'Erro ao carregar status: ' + e.message;
       }
+    }
+
+    function applySorting(items) {
+      if (!sortKey) return items.slice();
+      const sorted = items.slice().sort((a,b) => {
+        const av = a[sortKey] || '';
+        const bv = b[sortKey] || '';
+        if (sortKey === 'updated_at' || sortKey === 'last_check_at') {
+          return (new Date(av)).getTime() - (new Date(bv)).getTime();
+        }
+        if (typeof av === 'string' && typeof bv === 'string') {
+          return av.localeCompare(bv);
+        }
+        return av > bv ? 1 : av < bv ? -1 : 0;
+      });
+      if (sortDir === 'desc') sorted.reverse();
+      return sorted;
+    }
+
+    function applyPaging(items) {
+      const start = (currentPage - 1) * pageSize;
+      const pageItems = items.slice(start, start + pageSize);
+      updatePageInfo(items.length);
+      return pageItems;
+    }
+
+    function updatePageInfo(total) {
+      const info = document.getElementById('page-info');
+      const totalPages = Math.max(1, Math.ceil(total / pageSize));
+      if (currentPage > totalPages) currentPage = totalPages;
+      info.textContent = `Página ${currentPage} de ${totalPages} (${total} recursos)`;
+      document.getElementById('prev-page').disabled = currentPage <= 1;
+      document.getElementById('next-page').disabled = currentPage >= totalPages;
+    }
+
+    function handleSort(key) {
+      if (sortKey === key) {
+        sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+      } else {
+        sortKey = key;
+        sortDir = 'asc';
+      }
+      renderTable(applyPaging(applySorting(itemsCache)));
     }
 
     function renderTable(items) {
@@ -235,11 +299,15 @@
         <table>
           <thead>
             <tr>
-              <th>Recurso / ID</th><th>Tipo / Env</th><th>Subtype</th><th>Status</th><th>Resumo</th><th>Atualizado</th>
+              <th data-sort="resource_name" class="sortable">Recurso / ID</th><th data-sort="resource_type" class="sortable">Tipo / Env</th><th data-sort="resource_subtype" class="sortable">Subtype</th><th data-sort="current_status" class="sortable">Status</th><th>Resumo</th><th data-sort="updated_at" class="sortable">Atualizado</th>
             </tr>
           </thead>
           <tbody>${rows}</tbody>
         </table>`;
+      container.querySelectorAll('th.sortable').forEach((th) => {
+        th.style.cursor = 'pointer';
+        th.addEventListener('click', () => handleSort(th.getAttribute('data-sort')));
+      });
       container.querySelectorAll('tbody tr').forEach(row => {
         row.addEventListener('click', () => {
           selected = row.getAttribute('data-id');
@@ -299,6 +367,23 @@
     function setupControls() {
       document.getElementById('refresh').addEventListener('click', loadStatus);
       document.getElementById('apply-filters').addEventListener('click', loadStatus);
+      document.getElementById('filter-type').addEventListener('change', loadStatus);
+      document.getElementById('filter-status').addEventListener('change', loadStatus);
+      document.getElementById('prev-page').addEventListener('click', () => {
+        if (currentPage > 1) {
+          currentPage -= 1;
+          renderTable(applyPaging(applySorting(itemsCache)));
+        }
+      });
+      document.getElementById('next-page').addEventListener('click', () => {
+        currentPage += 1;
+        renderTable(applyPaging(applySorting(itemsCache)));
+      });
+      document.getElementById('page-size').addEventListener('change', (e) => {
+        pageSize = parseInt(e.target.value, 10) || 10;
+        currentPage = 1;
+        renderTable(applyPaging(applySorting(itemsCache)));
+      });
       document.getElementById('toggle-auto').addEventListener('click', () => {
         if (autoInterval) {
           clearInterval(autoInterval);
