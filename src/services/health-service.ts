@@ -107,7 +107,10 @@ export class HealthService {
       last_check_at: check.executed_at,
       last_success_at: check.final_status === 'UP' ? check.executed_at : existing?.last_success_at,
       consecutive_failures: nextFailures,
-      summary
+      summary: {
+        ...summary,
+        runtime_dependencies: this.buildRuntimeDependencies(check.metrics)
+      }
     };
 
     if (check.final_status === 'UP') {
@@ -145,5 +148,44 @@ export class HealthService {
 
   getCheck(checkId: string) {
     return memoryStore.getCheck(checkId);
+  }
+
+  private buildRuntimeDependencies(metrics: Record<string, import('../domain/types.js').MetricValue>) {
+    if (!metrics) return undefined;
+    const prismaConnectionOk = metrics.prisma_connection_ok as boolean | undefined;
+    const prismaPoolExhausted = metrics.prisma_pool_exhausted as boolean | undefined;
+    const p95 = metrics.prisma_query_latency_ms_p95 as number | undefined;
+    const errorRate = metrics.prisma_error_rate_pct_5m as number | undefined;
+    const prismaStatus: HealthStatus =
+      prismaConnectionOk === false
+        ? 'DOWN'
+        : prismaPoolExhausted
+        ? 'DEGRADED'
+        : p95 !== undefined && p95 !== null && p95 > 1000
+        ? 'DEGRADED'
+        : errorRate !== undefined && errorRate !== null && errorRate > 2
+        ? 'DEGRADED'
+        : 'UP';
+
+    if (
+      prismaConnectionOk === undefined &&
+      prismaPoolExhausted === undefined &&
+      p95 === undefined &&
+      errorRate === undefined
+    ) {
+      return undefined;
+    }
+
+    return {
+      prisma: {
+        status: prismaStatus,
+        connection_ok: prismaConnectionOk,
+        pool_exhausted: prismaPoolExhausted,
+        latency_p95_ms: p95 ?? null,
+        latency_avg_ms: (metrics.prisma_query_latency_ms_avg as number | undefined) ?? null,
+        error_rate_pct_5m: errorRate ?? null,
+        last_error_code: (metrics.prisma_last_error_code as string | undefined) ?? null
+      }
+    };
   }
 }

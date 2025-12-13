@@ -120,6 +120,8 @@
     .metric label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 4px; }
     .metric .value { font-weight: 700; font-size: 14px; }
     .error { color: var(--danger); }
+    .runtime-card { border: 1px solid var(--border); border-radius: 10px; padding: 10px; background: #0b1220; }
+    .sortable { user-select: none; }
     @media (max-width: 980px) {
       main { grid-template-columns: 1fr; }
     }
@@ -193,6 +195,43 @@
     let sortDir = 'asc';
     let currentPage = 1;
     let pageSize = 10;
+    const I18N = {
+      'pt-BR': {
+        runtimeDependencies: 'Dependências Runtime',
+        prismaOrm: 'Prisma ORM',
+        connection: 'Conexão',
+        poolExhausted: 'Pool exausto',
+        latencyP95: 'Latência p95',
+        latencyAvg: 'Latência média',
+        errorRate: 'Taxa de erro (5 min)',
+        lastErrorCode: 'Último código de erro'
+      },
+      'en-US': {
+        runtimeDependencies: 'Runtime Dependencies',
+        prismaOrm: 'Prisma ORM',
+        connection: 'Connection',
+        poolExhausted: 'Pool exhausted',
+        latencyP95: 'Latency p95',
+        latencyAvg: 'Avg latency',
+        errorRate: 'Error rate (5m)',
+        lastErrorCode: 'Last error code'
+      },
+      'es-ES': {
+        runtimeDependencies: 'Dependencias Runtime',
+        prismaOrm: 'Prisma ORM',
+        connection: 'Conexión',
+        poolExhausted: 'Pool agotado',
+        latencyP95: 'Latencia p95',
+        latencyAvg: 'Latencia media',
+        errorRate: 'Tasa de error (5m)',
+        lastErrorCode: 'Último código de error'
+      }
+    };
+
+    function i18n(key) {
+      const locale = document.getElementById('locale').value || 'pt-BR';
+      return (I18N[locale] && I18N[locale][key]) || I18N['pt-BR'][key] || key;
+    }
 
     function updateTypeOptions(items) {
       const select = document.getElementById('filter-type');
@@ -334,7 +373,7 @@
         ]);
         detail.innerHTML = `
           <div class=\"flex\">
-            <div class=\"title\" style=\"font-size:18px;gap:6px;\">${resourceId} ${statusPill(status.current_status)}</div>
+            <div class=\"title\" style=\"font-size:18px;gap:6px;\">${status.resource_name || resourceId} ${statusPill(status.current_status)}</div>
             <div class=\"muted\">${status.summary?.message || ''}</div>
           </div>
           <div class=\"metrics\">
@@ -342,6 +381,7 @@
               <div class=\"metric\"><label>${k}</label><div class=\"value\">${v}</div></div>
             `).join('') : '<div class=\"muted\">Sem métricas recentes</div>'}
           </div>
+          ${renderRuntimeDeps(status.summary?.runtime_dependencies || {})}
           <h3 class=\"small\">Histórico recente</h3>
           <div class=\"history\">
             ${renderHistory(history.items || [])}
@@ -350,6 +390,27 @@
       } catch (e) {
         detail.innerHTML = `<div class=\"error\">Erro ao carregar detalhes: ${e.message}</div>`;
       }
+    }
+
+    function renderRuntimeDeps(runtime) {
+      const prisma = runtime.prisma;
+      if (!prisma) return '';
+      return `
+        <div class=\"runtime-card\">
+          <div class=\"flex\" style=\"justify-content:space-between;\">
+            <div class=\"small\">${i18n('runtimeDependencies')} / ${i18n('prismaOrm')}</div>
+            <div>${statusPill(prisma.status || 'DEGRADED')}</div>
+          </div>
+          <div class=\"metrics\" style=\"margin-top:6px;\">
+            <div class=\"metric\"><label>${i18n('connection')}</label><div class=\"value\">${prisma.connection_ok === false ? 'false' : 'true'}</div></div>
+            <div class=\"metric\"><label>${i18n('poolExhausted')}</label><div class=\"value\">${prisma.pool_exhausted ? 'true' : 'false'}</div></div>
+            <div class=\"metric\"><label>${i18n('latencyP95')}</label><div class=\"value\">${prisma.latency_p95_ms ?? '-'}</div></div>
+            <div class=\"metric\"><label>${i18n('latencyAvg')}</label><div class=\"value\">${prisma.latency_avg_ms ?? '-'}</div></div>
+            <div class=\"metric\"><label>${i18n('errorRate')}</label><div class=\"value\">${prisma.error_rate_pct_5m ?? '-'}</div></div>
+            <div class=\"metric\"><label>${i18n('lastErrorCode')}</label><div class=\"value\">${prisma.last_error_code ?? '-'}</div></div>
+          </div>
+        </div>
+      `;
     }
 
     function renderHistory(items) {

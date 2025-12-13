@@ -15,6 +15,7 @@ export type ResourceSubtype =
   | 'kafka'
   | 'internal_api'
   | 'external_api'
+  | 'backend'
   | 'openai'
   | 'gemini'
   | 'anthropic'
@@ -109,6 +110,18 @@ export interface ResourceHealthStatus {
     primary_cause?: string;
     failed_rules?: string[];
     key_metrics?: Record<string, unknown>;
+    runtime_dependencies?: Record<
+      string,
+      {
+        status: HealthStatus;
+        connection_ok?: boolean;
+        pool_exhausted?: boolean;
+        latency_p95_ms?: number | null;
+        latency_avg_ms?: number | null;
+        error_rate_pct_5m?: number | null;
+        last_error_code?: string | null;
+      }
+    >;
   };
   updated_at?: string;
 }

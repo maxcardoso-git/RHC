@@ -27,5 +27,45 @@ export const i18nMessages = {
     'pt-BR': 'Recurso indisponível',
     'en-US': 'Resource unavailable',
     'es-ES': 'Recurso indisponible'
+  },
+  runtimeDependencies: {
+    'pt-BR': 'Dependências Runtime',
+    'en-US': 'Runtime Dependencies',
+    'es-ES': 'Dependencias Runtime'
+  },
+  prismaOrm: {
+    'pt-BR': 'Prisma ORM',
+    'en-US': 'Prisma ORM',
+    'es-ES': 'Prisma ORM'
+  },
+  connection: {
+    'pt-BR': 'Conexão',
+    'en-US': 'Connection',
+    'es-ES': 'Conexión'
+  },
+  poolExhausted: {
+    'pt-BR': 'Pool exausto',
+    'en-US': 'Pool exhausted',
+    'es-ES': 'Pool agotado'
+  },
+  latencyP95: {
+    'pt-BR': 'Latência p95',
+    'en-US': 'Latency p95',
+    'es-ES': 'Latencia p95'
+  },
+  latencyAvg: {
+    'pt-BR': 'Latência média',
+    'en-US': 'Avg latency',
+    'es-ES': 'Latencia media'
+  },
+  errorRate: {
+    'pt-BR': 'Taxa de erro (5 min)',
+    'en-US': 'Error rate (5m)',
+    'es-ES': 'Tasa de error (5m)'
+  },
+  lastErrorCode: {
+    'pt-BR': 'Último código de erro',
+    'en-US': 'Last error code',
+    'es-ES': 'Último código de error'
   }
 } satisfies Record<string, LocalizedString>;

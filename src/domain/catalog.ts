@@ -128,6 +128,60 @@ export const METRIC_CATALOG: MetricCatalogEntry[] = [
         }
       },
       {
+        name: 'prisma_connection_ok',
+        type: 'boolean',
+        description: {
+          'pt-BR': 'Conexão Prisma/DB funcionando.',
+          'en-US': 'Prisma/DB connection ok.',
+          'es-ES': 'Conexión Prisma/DB funcionando.'
+        }
+      },
+      {
+        name: 'prisma_query_latency_ms_avg',
+        type: 'duration_ms',
+        description: {
+          'pt-BR': 'Latência média das queries Prisma (janela curta).',
+          'en-US': 'Average Prisma query latency (short window).',
+          'es-ES': 'Latencia promedio de queries Prisma (ventana corta).'
+        }
+      },
+      {
+        name: 'prisma_query_latency_ms_p95',
+        type: 'duration_ms',
+        description: {
+          'pt-BR': 'Latência p95 das queries Prisma (janela curta).',
+          'en-US': 'p95 Prisma query latency (short window).',
+          'es-ES': 'Latencia p95 de queries Prisma (ventana corta).'
+        }
+      },
+      {
+        name: 'prisma_error_rate_pct_5m',
+        type: 'percentage',
+        description: {
+          'pt-BR': 'Taxa de erro Prisma em 5 minutos.',
+          'en-US': 'Prisma error rate over 5 minutes.',
+          'es-ES': 'Tasa de error de Prisma en 5 minutos.'
+        }
+      },
+      {
+        name: 'prisma_pool_exhausted',
+        type: 'boolean',
+        description: {
+          'pt-BR': 'Heurística de exaustão do pool Prisma/DB.',
+          'en-US': 'Heuristic for Prisma/DB pool exhaustion.',
+          'es-ES': 'Heurística de agotamiento del pool Prisma/DB.'
+        }
+      },
+      {
+        name: 'prisma_last_error_code',
+        type: 'string',
+        description: {
+          'pt-BR': 'Último código de erro Prisma visto.',
+          'en-US': 'Last Prisma error code seen.',
+          'es-ES': 'Último código de error Prisma visto.'
+        }
+      },
+      {
         name: 'timeout_rate_pct',
         type: 'percentage',
         description: {
@@ -243,7 +297,7 @@ export const METRIC_CATALOG: MetricCatalogEntry[] = [
 export const RESOURCE_TYPES: Array<{ type: ResourceType; subtypes: ResourceSubtype[] }> = [
   { type: 'database', subtypes: ['postgres', 'mongo'] },
   { type: 'cache_queue', subtypes: ['redis', 'rabbitmq', 'kafka'] },
-  { type: 'http_service', subtypes: ['internal_api', 'external_api'] },
+  { type: 'http_service', subtypes: ['internal_api', 'external_api', 'backend'] },
   { type: 'llm_provider', subtypes: ['openai', 'gemini', 'anthropic', 'local_vllm', 'local_tgi'] },
   { type: 'vector_db', subtypes: ['pgvector', 'pinecone', 'weaviate', 'qdrant'] }
 ];
