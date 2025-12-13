@@ -167,6 +167,21 @@
     let autoInterval = null;
     let selected = null;
 
+    function updateTypeOptions(items) {
+      const select = document.getElementById('filter-type');
+      const current = select.value;
+      const types = new Set(['', 'database', 'cache_queue', 'http_service', 'llm_provider', 'vector_db']);
+      items.forEach(item => types.add(item.resource_type));
+      select.innerHTML = '';
+      types.forEach((t) => {
+        const opt = document.createElement('option');
+        opt.value = t;
+        opt.textContent = t || 'Tipo';
+        if (t === current) opt.selected = true;
+        select.appendChild(opt);
+      });
+    }
+
     function statusPill(status) {
       return `<span class=\"status ${status}\">${status}</span>`;
     }
@@ -192,7 +207,9 @@
       try {
         document.getElementById('error').textContent = '';
         const data = await fetchJSON(`${API_BASE}/status?${params.toString()}`);
-        renderTable(data.items || []);
+        const items = data.items || [];
+        updateTypeOptions(items);
+        renderTable(items);
       } catch (e) {
         document.getElementById('error').textContent = 'Erro ao carregar status: ' + e.message;
       }
