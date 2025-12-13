@@ -33,6 +33,11 @@ Variáveis de ambiente opcionais:
 
 Use o header `Accept-Language` (`pt-BR`, `en-US`, `es-ES`) para mensagens localizadas. Quando `INTERNAL_API_KEY` estiver definido, inclua `X-Internal-Api-Key` no request.
 
+## UI simples (dashboard)
+- Acessar em `/ui` (ex.: http://localhost:3000/ui ou http://72.61.52.70:32000/ui).
+- Exibe status dos recursos com filtros, auto-refresh e detalhe/histórico ao clicar no recurso.
+- Consome os endpoints da API existente e envia `Accept-Language` conforme seleção na UI.
+
 ## Rodando via Docker
 ```bash
 docker build -t rhc:latest .
