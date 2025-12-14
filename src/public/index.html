@@ -213,13 +213,17 @@
           </div>
           <div>
             <label>Tipo</label>
-            <select id="cat-type">
-              <option value="http_service">http_service</option>
-              <option value="database">database</option>
-              <option value="cache_queue">cache_queue</option>
-              <option value="llm_provider">llm_provider</option>
-              <option value="vector_db">vector_db</option>
-            </select>
+            <div class="flex" style="gap:6px;">
+              <select id="cat-type">
+                <option value="http_service">http_service</option>
+                <option value="database">database</option>
+                <option value="cache_queue">cache_queue</option>
+                <option value="llm_provider">llm_provider</option>
+                <option value="vector_db">vector_db</option>
+                <option value="custom">Outro (digite)</option>
+              </select>
+              <input id="cat-type-custom" type="text" placeholder="custom type" style="width:120px; display:none;" />
+            </div>
           </div>
           <div>
             <label>Subtype</label>
@@ -707,7 +711,17 @@
       document.getElementById('cat-config').value = entry?.config ? JSON.stringify(entry.config, null, 2) : '';
       document.getElementById('cat-id').value = entry.id || '';
       document.getElementById('cat-name').value = entry.name || '';
-      document.getElementById('cat-type').value = entry.type || 'http_service';
+      const typeSelect = document.getElementById('cat-type');
+      const typeCustom = document.getElementById('cat-type-custom');
+      if (['database','cache_queue','http_service','llm_provider','vector_db'].includes(entry.type || '')) {
+        typeSelect.value = entry.type || 'http_service';
+        typeCustom.style.display = 'none';
+        typeCustom.value = '';
+      } else {
+        typeSelect.value = 'custom';
+        typeCustom.style.display = 'block';
+        typeCustom.value = entry.type || '';
+      }
       document.getElementById('cat-subtype').value = entry.subtype || '';
       document.getElementById('cat-env').value = entry.env || '';
       renderHints(entry);
@@ -745,10 +759,19 @@
         const entry = catalogCache.find((c) => c.id === e.target.value);
         if (entry) populateCatalogForm(entry);
       });
+      document.getElementById('cat-type').addEventListener('change', (e) => {
+        const customInput = document.getElementById('cat-type-custom');
+        if (e.target.value === 'custom') {
+          customInput.style.display = 'block';
+        } else {
+          customInput.style.display = 'none';
+          customInput.value = '';
+        }
+      });
       document.getElementById('catalog-save').addEventListener('click', async () => {
-      setCatalogError(''); setCatalogSuccess('');
-      const id = document.getElementById('catalog-select').value;
-      const formId = document.getElementById('cat-id').value.trim() || id;
+        setCatalogError(''); setCatalogSuccess('');
+        const id = document.getElementById('catalog-select').value;
+        const formId = document.getElementById('cat-id').value.trim() || id;
       if (!formId) { setCatalogError('Informe um ID'); return; }
       const formName = document.getElementById('cat-name').value.trim() || 'Sem nome';
       const formType = document.getElementById('cat-type').value || 'http_service';
@@ -766,7 +789,7 @@
       const payload = {
         id: formId,
         name: formName,
-        type: formType,
+        type: formType === 'custom' ? (document.getElementById('cat-type-custom').value.trim() || 'http_service') : formType,
         subtype: formSubtype,
         env: formEnv,
         connection: {
@@ -785,11 +808,11 @@
           config: configJson
         };
         try {
-          const res = await fetch(`${API_BASE}/catalog/${formId}`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-          });
+        const res = await fetch(`${API_BASE}/catalog/${formId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
           if (!res.ok) throw new Error('Erro ao salvar');
           setCatalogSuccess('Salvo');
           await loadCatalog();
