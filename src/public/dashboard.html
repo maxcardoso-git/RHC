@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RHC - Dashboard</title>
+  <link rel="icon" type="image/png" href="/ui/logo.png" />
+  <style>
+    :root {
+      --bg: #0b1220;
+      --panel: #0f172a;
+      --muted: #94a3b8;
+      --ok: #34d399;
+      --warn: #f59e0b;
+      --down: #f87171;
+      --border: #1f2937;
+      --font: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: radial-gradient(circle at 20% 20%, rgba(52, 211, 153, 0.08), transparent 25%),
+                  radial-gradient(circle at 80% 10%, rgba(245, 158, 11, 0.07), transparent 30%),
+                  var(--bg);
+      color: #e2e8f0;
+      font-family: var(--font);
+      min-height: 100vh;
+    }
+    header {
+      padding: 18px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .title { font-size: 22px; font-weight: 700; display: flex; gap: 10px; align-items: center; letter-spacing: -0.01em; }
+    .logo { width: 36px; height: 36px; }
+    .pill { padding: 4px 10px; border-radius: 999px; background: rgba(52, 211, 153, 0.12); color: var(--ok); border: 1px solid rgba(52, 211, 153, 0.3); font-weight: 700; font-size: 12px; }
+    main { padding: 0 28px 28px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(280px,1fr)); gap: 12px; }
+    .card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 12px; }
+    .card h3 { margin: 0 0 8px; font-size: 15px; }
+    .table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .table th, .table td { padding: 6px 6px; border-bottom: 1px solid var(--border); }
+    .table th { color: var(--muted); font-weight: 600; text-transform: uppercase; font-size: 11px; }
+    .status { padding: 3px 8px; border-radius: 8px; font-weight: 700; }
+    .status.UP { background: rgba(52, 211, 153, 0.15); color: var(--ok); }
+    .status.DEGRADED { background: rgba(245, 158, 11, 0.15); color: var(--warn); }
+    .status.DOWN { background: rgba(248, 113, 113, 0.15); color: var(--down); }
+    .muted { color: var(--muted); }
+    .topbar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .link { color: #60a5fa; text-decoration: none; }
+    .link:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="title"><img src="/ui/logo.png" class="logo" alt="logo" />RHC Dashboard <span class="pill">NOC view</span></div>
+    <div class="topbar">
+      <a class="link" href="/ui/">Voltar ao painel</a>
+      <button id="refresh" style="padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:#111827;color:#e5e7eb;cursor:pointer;">Atualizar</button>
+    </div>
+  </header>
+  <main>
+    <div id="grid" class="grid"></div>
+  </main>
+  <script>
+    const API = '/api/v1/resource-health/status?limit=500';
+    const grid = document.getElementById('grid');
+
+    function statusPill(s) {
+      return `<span class="status ${s}">${s}</span>`;
+    }
+
+    function renderGroup(title, items) {
+      const rows = items.map(i => `
+        <tr data-id="${i.resource_id}">
+          <td>${statusPill(i.current_status)}</td>
+          <td><div style="font-weight:700;">${i.resource_name || i.resource_id}</div><div class="muted">${i.env || '-'}</div></td>
+          <td>${i.resource_subtype || '-'}</td>
+          <td class="muted">${i.summary?.message || '-'}</td>
+        </tr>
+      `).join('');
+      return `
+        <div class="card">
+          <h3>${title} <span class="muted">(${items.length})</span></h3>
+          <table class="table">
+            <thead><tr><th>St</th><th>Recurso</th><th>Subtype</th><th>Resumo</th></tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    function render(data) {
+      const groups = {};
+      data.forEach(i => {
+        const key = i.resource_type || 'outros';
+        if (!groups[key]) groups[key] = [];
+        groups[key].push(i);
+      });
+      const cards = Object.entries(groups).map(([type, items]) => renderGroup(type, items));
+      grid.innerHTML = cards.join('');
+      grid.querySelectorAll('tr[data-id]').forEach(row => {
+        row.style.cursor = 'pointer';
+        row.addEventListener('click', () => {
+          const id = row.getAttribute('data-id');
+          window.location.href = `/ui/#${id}`;
+        });
+      });
+    }
+
+    async function load() {
+      const res = await fetch(API);
+      const payload = await res.json();
+      render(payload.items || []);
+    }
+
+    document.getElementById('refresh').addEventListener('click', load);
+    load();
+  </script>
+</body>
+</html>
