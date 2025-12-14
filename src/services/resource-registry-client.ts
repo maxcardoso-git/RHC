@@ -13,6 +13,9 @@ type OrchestratorResource = {
   healthStatus?: string | null;
   healthCheckEnabled?: boolean | null;
   healthCheckSchedule?: string | null;
+  connection?: Record<string, unknown> | null;
+  auth?: Record<string, unknown> | null;
+  config?: Record<string, unknown> | null;
 };
 
 export class ResourceRegistryClient {
@@ -144,6 +147,16 @@ export class ResourceRegistryClient {
     const subtype = this.mapSubtype(raw.subtype, raw.name);
     const enabled = raw.isActive ?? true;
     const schedule = raw.healthCheckSchedule || 'PT10M';
+    const connection: Record<string, unknown> = {};
+    if (raw.connection && typeof raw.connection === 'object') {
+      Object.assign(connection, raw.connection);
+    }
+    if (raw.endpoint) {
+      connection.endpoint ??= raw.endpoint;
+    }
+    if (raw.auth) {
+      connection.auth = raw.auth;
+    }
     const descriptor: ResourceDescriptor = {
       id: raw.id,
       name: raw.name,
@@ -152,7 +165,8 @@ export class ResourceRegistryClient {
       enabled,
       env: raw.env || undefined,
       tags: [raw.type?.toLowerCase() || '', raw.env?.toLowerCase() || ''].filter(Boolean),
-      connection: { endpoint: raw.endpoint },
+      connection: Object.keys(connection).length ? connection : undefined,
+      config: raw.config || undefined,
       policy: undefined
     };
     descriptor.policy = this.defaultPolicy(descriptor, schedule, enabled);

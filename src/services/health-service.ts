@@ -12,18 +12,18 @@ import {
   ResourceDescriptor
 } from '../domain/types.js';
 import { logger } from '../utils/logger.js';
-import { ResourceRegistryClient } from './resource-registry-client.js';
+import { CatalogService } from './catalog-service.js';
 import { URL } from 'url';
 
 export class HealthService {
-  constructor(private registryClient: ResourceRegistryClient) {}
+  constructor(private catalog: CatalogService) {}
 
   async runCheck(
     resourceId: string,
     executionType: ExecutionType,
     resourceOverride?: ResourceDescriptor
   ): Promise<ResourceHealthCheck> {
-    const resource = resourceOverride || (await this.registryClient.getResource(resourceId));
+    const resource = resourceOverride || this.catalog.get(resourceId);
     if (!resource) {
       throw new Error('RESOURCE_NOT_FOUND');
     }

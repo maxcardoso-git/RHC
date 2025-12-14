@@ -2,7 +2,7 @@ import { AppConfig } from '../config/index.js';
 import { memoryStore } from '../stores/memory-store.js';
 import { HealthService } from '../services/health-service.js';
 import { logger } from '../utils/logger.js';
-import { ResourceRegistryClient } from '../services/resource-registry-client.js';
+import { CatalogService } from '../services/catalog-service.js';
 
 function parseIntervalSeconds(value: string): number {
   // Minimal ISO-8601 duration parser supporting minutes/seconds: PT10M, PT30S
@@ -20,7 +20,7 @@ function jitter(maxSeconds: number): number {
 export class Scheduler {
   private timer: NodeJS.Timeout | null = null;
 
-  constructor(private cfg: AppConfig, private registryClient: ResourceRegistryClient, private healthService: HealthService) {}
+  constructor(private cfg: AppConfig, private catalogService: CatalogService, private healthService: HealthService) {}
 
   start() {
     if (this.timer) return;
@@ -37,7 +37,7 @@ export class Scheduler {
   }
 
   private async loop() {
-    const resources = (await this.registryClient.listResources()).filter((r) => r.enabled && r.policy?.enabled);
+    const resources = this.catalogService.list().filter((r) => r.enabled && r.policy?.enabled);
     memoryStore.setResources(resources);
     for (const res of resources) {
       const policy = res.policy!;

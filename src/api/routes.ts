@@ -4,6 +4,7 @@ import { Locale } from '../domain/types.js';
 import { pickLocale } from '../i18n/index.js';
 import { HealthService } from '../services/health-service.js';
 import { ResourceRegistryClient } from '../services/resource-registry-client.js';
+import { CatalogService } from '../services/catalog-service.js';
 
 function pickUserLocale(header?: string | string[]): Locale | undefined {
   if (!header) return undefined;
@@ -21,14 +22,14 @@ function localizeSummary(locale: Locale | undefined, summary: any) {
 
 export async function registerRoutes(
   app: FastifyInstance,
-  deps: { healthService: HealthService; registryClient: ResourceRegistryClient }
+  deps: { healthService: HealthService; registryClient: ResourceRegistryClient; catalog: CatalogService }
 ) {
   const base = '/api/v1/resource-health';
 
   app.post(`${base}/check/:resource_id`, async (request, reply) => {
     const resourceId = (request.params as { resource_id: string }).resource_id;
     try {
-      const resource = await deps.registryClient.getResource(resourceId);
+      const resource = deps.catalog.get(resourceId);
       if (!resource) {
         reply.code(404).send({ code: 'RESOURCE_NOT_FOUND' });
         return;
@@ -108,7 +109,53 @@ export async function registerRoutes(
   });
 
   app.get(`${base}/resources`, async (_request, reply) => {
-    const items = await deps.registryClient.listResources();
-    reply.send({ items });
+    const items = deps.catalog.list();
+    reply.send({ items, source: 'catalog' });
+  });
+
+  // Catalog management
+  app.post(`${base}/catalog/import`, async (_request, reply) => {
+    try {
+      const result = await deps.catalog.importFromRegistry();
+      reply.send({ imported: result.imported });
+    } catch (err) {
+      reply.code(500).send({ code: 'IMPORT_FAILED' });
+    }
+  });
+
+  app.get(`${base}/catalog`, async (_request, reply) => {
+    reply.send({ items: deps.catalog.list() });
+  });
+
+  app.get(`${base}/catalog/:resource_id`, async (request, reply) => {
+    const resourceId = (request.params as { resource_id: string }).resource_id;
+    const res = deps.catalog.get(resourceId);
+    if (!res) {
+      reply.code(404).send({ code: 'RESOURCE_NOT_FOUND' });
+      return;
+    }
+    reply.send(res);
+  });
+
+  app.post(`${base}/catalog`, async (request, reply) => {
+    const body = request.body as any;
+    if (!body?.id || !body?.name || !body?.type) {
+      reply.code(400).send({ code: 'INVALID_BODY' });
+      return;
+    }
+    const saved = deps.catalog.upsert(body, 'manual');
+    reply.code(201).send(saved);
+  });
+
+  app.patch(`${base}/catalog/:resource_id`, async (request, reply) => {
+    const resourceId = (request.params as { resource_id: string }).resource_id;
+    const body = request.body as any;
+    const existing = deps.catalog.get(resourceId);
+    if (!existing) {
+      reply.code(404).send({ code: 'RESOURCE_NOT_FOUND' });
+      return;
+    }
+    const saved = deps.catalog.upsert({ ...existing, ...body, id: resourceId }, 'manual');
+    reply.send(saved);
   });
 }

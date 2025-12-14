@@ -7,8 +7,9 @@ import { AppConfig } from '../config/index.js';
 import { registerRoutes } from './routes.js';
 import { HealthService } from '../services/health-service.js';
 import { ResourceRegistryClient } from '../services/resource-registry-client.js';
+import { CatalogService } from '../services/catalog-service.js';
 
-export function buildServer(cfg: AppConfig, deps: { healthService: HealthService; registryClient: ResourceRegistryClient }) {
+export function buildServer(cfg: AppConfig, deps: { healthService: HealthService; registryClient: ResourceRegistryClient; catalog: CatalogService }) {
   const app = Fastify({ logger: true });
 
   app.register(cors, { origin: false });

@@ -54,7 +54,9 @@ async function passiveCollector(
 }
 
 async function httpHealthCollector(resource: ResourceDescriptor): Promise<MetricCollectorResult> {
-  const endpoint = (resource.connection as any)?.endpoint as string | undefined;
+  const connection = (resource.connection as any) || {};
+  const config = (resource.config as any) || {};
+  const endpoint = (connection.endpoint as string) || (config.baseUrl as string) || undefined;
   if (!endpoint) {
     return {
       metrics: {
@@ -66,24 +68,57 @@ async function httpHealthCollector(resource: ResourceDescriptor): Promise<Metric
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 5000);
   const started = Date.now();
+  const headers: Record<string, string> = { Accept: 'application/json' };
+  let method: 'GET' | 'POST' = 'GET';
+  let body: any;
+
+  const auth = connection.auth as any;
+  if (auth) {
+    const mode = (auth.mode || auth.type || '').toString().toUpperCase();
+    if (mode === 'BEARER' && auth.token) {
+      headers.Authorization = `Bearer ${auth.token}`;
+    } else if (mode === 'API_KEY' && auth.header && auth.value) {
+      headers[auth.header] = auth.value;
+    }
+  }
+
+  // For LLM providers, prefer POST with a minimal synthetic payload
+  if (resource.type === 'llm_provider') {
+    method = 'POST';
+    headers['Content-Type'] = 'application/json';
+    body =
+      config.body ||
+      connection.body ||
+      {
+        model: config.model || 'gpt-4o-mini',
+        messages: [{ role: 'user', content: 'healthcheck: reply OK' }],
+        max_tokens: 4
+      };
+  }
   try {
-    const res = await fetch(endpoint, { signal: controller.signal, headers: { Accept: 'application/json' } });
+    const res = await fetch(endpoint, {
+      signal: controller.signal,
+      headers,
+      method,
+      body: body ? JSON.stringify(body) : undefined
+    });
     const response_time_ms = Date.now() - started;
     const contentType = res.headers.get('content-type') || '';
-    let body: any = null;
+    let resBody: any = null;
     if (contentType.includes('application/json')) {
       try {
-        body = await res.json();
+        resBody = await res.json();
       } catch {
-        body = null;
+        resBody = null;
       }
     }
     const metrics: Record<string, import('../domain/types.js').MetricValue> = {
       status_code: res.status,
-      response_time_ms
+      response_time_ms,
+      availability: res.status >= 200 && res.status < 400
     };
-    if (body?.runtime_dependencies?.prisma) {
-      const prisma = body.runtime_dependencies.prisma;
+    if (resBody?.runtime_dependencies?.prisma) {
+      const prisma = resBody.runtime_dependencies.prisma;
       metrics.prisma_connection_ok = prisma.prisma_connection_ok ?? prisma.connection_ok ?? null;
       metrics.prisma_query_latency_ms_avg = prisma.prisma_query_latency_ms_avg ?? prisma.latency_avg ?? null;
       metrics.prisma_query_latency_ms_p95 = prisma.prisma_query_latency_ms_p95 ?? prisma.latency_p95 ?? null;
@@ -91,7 +126,7 @@ async function httpHealthCollector(resource: ResourceDescriptor): Promise<Metric
       metrics.prisma_pool_exhausted = prisma.prisma_pool_exhausted ?? prisma.pool_exhausted ?? null;
       metrics.prisma_last_error_code = prisma.prisma_last_error_code ?? prisma.last_error_code ?? null;
     }
-    return { metrics, debug: { source: 'http_health', body: !!body } };
+    return { metrics, debug: { source: 'http_health', body: !!resBody } };
   } catch (err) {
     logger.warn({ err, resourceId: resource.id }, 'http health collector failed');
     return {

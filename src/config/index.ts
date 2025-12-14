@@ -7,6 +7,9 @@ export interface AppConfig {
   port: number;
   apiKey?: string;
   defaultLocale: Locale;
+  catalog: {
+    filePath: string;
+  };
   resourceRegistry: {
     baseUrl: string;
     apiKey?: string;
@@ -28,6 +31,9 @@ export function loadConfig(): AppConfig {
     port: parseInt(process.env.PORT || '3000', 10),
     apiKey: process.env.INTERNAL_API_KEY,
     defaultLocale: (process.env.DEFAULT_LOCALE as Locale) || DEFAULT_LOCALE,
+    catalog: {
+      filePath: process.env.CATALOG_FILE || '/app/data/resource-catalog.json'
+    },
     resourceRegistry: {
       baseUrl: process.env.RESOURCE_REGISTRY_BASE_URL || 'http://localhost:3000/api/v1/orchestrator',
       apiKey: process.env.RESOURCE_REGISTRY_API_KEY,

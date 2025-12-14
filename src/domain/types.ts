@@ -92,6 +92,7 @@ export interface ResourceDescriptor {
   criticality?: 'tier1' | 'tier2' | 'tier3';
   tags?: string[];
   connection?: Record<string, unknown>;
+  config?: Record<string, unknown>;
   policy?: HealthPolicy;
 }
 
