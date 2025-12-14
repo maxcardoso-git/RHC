@@ -198,6 +198,7 @@
       <h2>Catálogo (editar)</h2>
       <div class="controls">
         <select id="catalog-select"></select>
+        <button id="catalog-new" class="secondary">Novo item</button>
         <button id="catalog-refresh" class="secondary">Recarregar catálogo</button>
         <button id="catalog-import" class="secondary">Importar snapshot do Registry</button>
       </div>
@@ -298,6 +299,7 @@
     let pageSize = 10;
     let catalogCache = [];
     let currentCatalogEntry = null;
+    const genId = () => (crypto.randomUUID ? crypto.randomUUID() : 'res-' + Math.random().toString(16).slice(2, 10));
     const I18N = {
       'pt-BR': {
         runtimeDependencies: 'Dependências Runtime',
@@ -744,6 +746,27 @@
 
     function bindCatalog() {
       document.getElementById('catalog-refresh').addEventListener('click', loadCatalog);
+      document.getElementById('catalog-new').addEventListener('click', () => {
+        setCatalogError(''); setCatalogSuccess('');
+        const newId = genId();
+        const blank = {
+          id: newId,
+          name: 'Novo recurso',
+          type: 'http_service',
+          subtype: '',
+          env: 'DEV',
+          connection: { endpoint: '' }
+        };
+        currentCatalogEntry = blank;
+        populateCatalogForm(blank);
+        // adiciona opção temporária no select
+        const select = document.getElementById('catalog-select');
+        const opt = document.createElement('option');
+        opt.value = newId;
+        opt.textContent = `${blank.name} (${blank.type})`;
+        select.appendChild(opt);
+        select.value = newId;
+      });
       document.getElementById('catalog-import').addEventListener('click', async () => {
         setCatalogError(''); setCatalogSuccess('');
         try {
