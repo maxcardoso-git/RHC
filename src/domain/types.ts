@@ -122,6 +122,10 @@ export interface ResourceHealthStatus {
         last_error_code?: string | null;
       }
     >;
+    connection_info?: {
+      endpoint?: string;
+      port?: number;
+    };
   };
   updated_at?: string;
 }

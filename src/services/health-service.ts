@@ -13,6 +13,7 @@ import {
 } from '../domain/types.js';
 import { logger } from '../utils/logger.js';
 import { ResourceRegistryClient } from './resource-registry-client.js';
+import { URL } from 'url';
 
 export class HealthService {
   constructor(private registryClient: ResourceRegistryClient) {}
@@ -109,7 +110,8 @@ export class HealthService {
       consecutive_failures: nextFailures,
       summary: {
         ...summary,
-        runtime_dependencies: this.buildRuntimeDependencies(check.metrics)
+        runtime_dependencies: this.buildRuntimeDependencies(check.metrics),
+        connection_info: this.buildConnectionInfo(resource)
       }
     };
 
@@ -187,5 +189,22 @@ export class HealthService {
         last_error_code: (metrics.prisma_last_error_code as string | undefined) ?? null
       }
     };
+  }
+
+  private buildConnectionInfo(resource: ResourceDescriptor) {
+    const endpoint = (resource.connection as any)?.endpoint as string | undefined;
+    if (!endpoint) return undefined;
+    try {
+      const url = new URL(endpoint);
+      url.username = '';
+      url.password = '';
+      const port = url.port ? Number(url.port) : url.protocol === 'https:' ? 443 : 80;
+      return {
+        endpoint: url.toString(),
+        port
+      };
+    } catch {
+      return { endpoint };
+    }
   }
 }

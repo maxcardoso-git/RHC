@@ -67,5 +67,20 @@ export const i18nMessages = {
     'pt-BR': 'Último código de erro',
     'en-US': 'Last error code',
     'es-ES': 'Último código de error'
+  },
+  connectionInfo: {
+    'pt-BR': 'Localização do serviço',
+    'en-US': 'Service location',
+    'es-ES': 'Ubicación del servicio'
+  },
+  endpoint: {
+    'pt-BR': 'Endpoint',
+    'en-US': 'Endpoint',
+    'es-ES': 'Endpoint'
+  },
+  port: {
+    'pt-BR': 'Porta',
+    'en-US': 'Port',
+    'es-ES': 'Puerto'
   }
 } satisfies Record<string, LocalizedString>;

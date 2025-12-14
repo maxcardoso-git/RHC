@@ -122,6 +122,7 @@
     .error { color: var(--danger); }
     .runtime-card { border: 1px solid var(--border); border-radius: 10px; padding: 10px; background: #0b1220; }
     .sortable { user-select: none; }
+    .info-card { border: 1px solid var(--border); border-radius: 10px; padding: 10px; background: #0b1220; }
     @media (max-width: 980px) {
       main { grid-template-columns: 1fr; }
     }
@@ -381,6 +382,7 @@
               <div class=\"metric\"><label>${k}</label><div class=\"value\">${v}</div></div>
             `).join('') : '<div class=\"muted\">Sem métricas recentes</div>'}
           </div>
+          ${renderConnection(status.summary?.connection_info)}
           ${renderRuntimeDeps(status.summary?.runtime_dependencies || {})}
           <h3 class=\"small\">Histórico recente</h3>
           <div class=\"history\">
@@ -408,6 +410,21 @@
             <div class=\"metric\"><label>${i18n('latencyAvg')}</label><div class=\"value\">${prisma.latency_avg_ms ?? '-'}</div></div>
             <div class=\"metric\"><label>${i18n('errorRate')}</label><div class=\"value\">${prisma.error_rate_pct_5m ?? '-'}</div></div>
             <div class=\"metric\"><label>${i18n('lastErrorCode')}</label><div class=\"value\">${prisma.last_error_code ?? '-'}</div></div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderConnection(conn) {
+      if (!conn || (!conn.endpoint && !conn.port)) return '';
+      return `
+        <div class=\"info-card\">
+          <div class=\"flex\" style=\"justify-content:space-between;\">
+            <div class=\"small\">${i18n('connectionInfo')}</div>
+          </div>
+          <div class=\"metrics\" style=\"margin-top:6px;\">
+            ${conn.endpoint ? `<div class=\"metric\"><label>${i18n('endpoint')}</label><div class=\"value\">${conn.endpoint}</div></div>` : ''}
+            ${conn.port ? `<div class=\"metric\"><label>${i18n('port')}</label><div class=\"value\">${conn.port}</div></div>` : ''}
           </div>
         </div>
       `;
