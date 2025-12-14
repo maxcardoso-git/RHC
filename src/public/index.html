@@ -126,6 +126,9 @@
     .input-row { display: grid; grid-template-columns: repeat(auto-fit,minmax(160px,1fr)); gap: 8px; }
     textarea { width: 100%; min-height: 120px; background: #0b1220; border: 1px solid var(--border); color: #e5e7eb; border-radius: 8px; padding: 8px; font-family: monospace; font-size: 12px; }
     .catalog-actions { display:flex; gap:8px; flex-wrap:wrap; }
+    .hint-box { border:1px solid var(--border); border-radius:10px; padding:10px; background:#0b1220; margin-top:8px; }
+    .hint-box h4 { margin:0 0 6px; font-size:13px; }
+    .hint-box ul { margin:0; padding-left:16px; color: var(--muted); font-size:12px; line-height:1.4; }
     @media (max-width: 980px) {
       main { grid-template-columns: 1fr; }
     }
@@ -240,6 +243,10 @@
           <div id="catalog-error" class="error small"></div>
           <div id="catalog-success" class="small" style="color:var(--ok);"></div>
         </div>
+        <div class="hint-box">
+          <h4>Guia para preenchimento</h4>
+          <div id="catalog-hints" class="small muted">Selecione um recurso para ver dicas de endpoint/auth/body por tipo.</div>
+        </div>
       </div>
     </section>
   </main>
@@ -254,6 +261,7 @@
     let currentPage = 1;
     let pageSize = 10;
     let catalogCache = [];
+    let currentCatalogEntry = null;
     const I18N = {
       'pt-BR': {
         runtimeDependencies: 'Dependências Runtime',
@@ -574,7 +582,64 @@
       if (msg) setTimeout(() => setCatalogSuccess(''), 2000);
     }
 
+    function renderHints(entry) {
+      const box = document.getElementById('catalog-hints');
+      if (!entry) { box.textContent = 'Selecione um recurso para ver dicas.'; return; }
+      const type = entry.type || '';
+      const subtype = (entry.subtype || '').toLowerCase();
+      const name = (entry.name || '').toLowerCase();
+      let tips = [];
+      if (type === 'database' || subtype === 'postgres') {
+        tips = [
+          'Use endpoint do health do DB (ex: http://host:5432/health ou PG ping).',
+          'Auth não se aplica aqui (collector não abre credenciais ainda).',
+          'Se tiver replica, inclua lag na config JSON (opcional).'
+        ];
+      } else if (type === 'cache_queue' || subtype === 'redis') {
+        tips = [
+          'Endpoint: health/ping do Redis/filas (ex: http://host:port/health).',
+          'Auth: se houver API key, preencha header/valor.',
+          'Body: geralmente vazio; mantenha GET.'
+        ];
+      } else if (type === 'llm_provider' || subtype === 'openai' || subtype === 'gemini') {
+        tips = [
+          'Endpoint: URL de chat/completions ou embeddings de health sintético.',
+          'Método: POST. Body: {"model":"...","messages":[{"role":"user","content":"healthcheck"}],"max_tokens":4}.',
+          'Auth: Bearer token do provedor.'
+        ];
+      } else if (type === 'http_service') {
+        if (name.includes('ace') || name.includes('fsb')) {
+          tips = [
+            'Endpoint: health da API (ex: http://host:port/api/v1/health).',
+            'Método: GET. Auth: se precisar, API Key/Bearer.',
+            'Body vazio; apenas GET 2xx basta.'
+          ];
+        } else if (subtype === 'external_api') {
+          tips = [
+            'Endpoint: URL pública de health/hello.',
+            'Se exigir token, use Auth -> API Key ou Bearer.',
+            'Body geralmente vazio; mantenha GET.'
+          ];
+        } else {
+          tips = [
+            'Endpoint: health/ping do serviço.',
+            'Auth: preencha se o serviço exigir header.',
+            'Body vazio salvo se o health for POST.'
+          ];
+        }
+      } else if (type === 'vector_db') {
+        tips = [
+          'Endpoint: health/ping do vetor (ex: http://host:port/health).',
+          'Auth se houver. Método: GET.'
+        ];
+      } else {
+        tips = ['Sem dicas específicas; configure endpoint/método/auth conforme seu serviço.'];
+      }
+      box.innerHTML = '<ul>' + tips.map(t => `<li>${t}</li>`).join('') + '</ul>';
+    }
+
     function populateCatalogForm(entry) {
+      currentCatalogEntry = entry;
       document.getElementById('catalog-select').value = entry.id;
       document.getElementById('cat-endpoint').value = entry?.connection?.endpoint || entry?.config?.baseUrl || '';
       document.getElementById('cat-method').value = (entry?.connection?.method || 'GET').toUpperCase();
@@ -584,6 +649,7 @@
       document.getElementById('cat-auth-token').value = auth.token || auth.value || '';
       document.getElementById('cat-body').value = entry?.connection?.body ? JSON.stringify(entry.connection.body, null, 2) : '';
       document.getElementById('cat-config').value = entry?.config ? JSON.stringify(entry.config, null, 2) : '';
+      renderHints(entry);
     }
 
     function selectCatalogResource(resourceId) {
