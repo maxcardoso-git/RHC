@@ -25,6 +25,11 @@ export function buildServer(cfg: AppConfig, deps: { healthService: HealthService
     reply.sendFile('index.html');
   });
 
+  // Home: redirect to dashboard
+  app.get('/', (_req, reply) => {
+    reply.redirect('/ui/dashboard.html');
+  });
+
   app.addHook('onRequest', async (request, reply) => {
     if (!cfg.apiKey) return;
     const headerKey = request.headers['x-internal-api-key'];
