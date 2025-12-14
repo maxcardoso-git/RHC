@@ -204,6 +204,34 @@
       <div class="grid small">
         <div class="input-row">
           <div>
+            <label>ID</label>
+            <input id="cat-id" type="text" placeholder="uuid ou slug" />
+          </div>
+          <div>
+            <label>Nome</label>
+            <input id="cat-name" type="text" placeholder="Nome do recurso" />
+          </div>
+          <div>
+            <label>Tipo</label>
+            <select id="cat-type">
+              <option value="http_service">http_service</option>
+              <option value="database">database</option>
+              <option value="cache_queue">cache_queue</option>
+              <option value="llm_provider">llm_provider</option>
+              <option value="vector_db">vector_db</option>
+            </select>
+          </div>
+          <div>
+            <label>Subtype</label>
+            <input id="cat-subtype" type="text" placeholder="ex: postgres, external_api" />
+          </div>
+          <div>
+            <label>Ambiente (env)</label>
+            <input id="cat-env" type="text" placeholder="DEV/PRD" />
+          </div>
+        </div>
+        <div class="input-row">
+          <div>
             <label>Endpoint</label>
             <input id="cat-endpoint" type="text" placeholder="http://..." />
           </div>
@@ -677,6 +705,11 @@
       document.getElementById('cat-auth-token').value = auth.token || auth.value || '';
       document.getElementById('cat-body').value = entry?.connection?.body ? JSON.stringify(entry.connection.body, null, 2) : '';
       document.getElementById('cat-config').value = entry?.config ? JSON.stringify(entry.config, null, 2) : '';
+      document.getElementById('cat-id').value = entry.id || '';
+      document.getElementById('cat-name').value = entry.name || '';
+      document.getElementById('cat-type').value = entry.type || 'http_service';
+      document.getElementById('cat-subtype').value = entry.subtype || '';
+      document.getElementById('cat-env').value = entry.env || '';
       renderHints(entry);
     }
 
@@ -713,25 +746,34 @@
         if (entry) populateCatalogForm(entry);
       });
       document.getElementById('catalog-save').addEventListener('click', async () => {
-        setCatalogError(''); setCatalogSuccess('');
-        const id = document.getElementById('catalog-select').value;
-        if (!id) { setCatalogError('Selecione um recurso'); return; }
-        let bodyJson, configJson;
-        try {
-          const rawBody = document.getElementById('cat-body').value.trim();
-          if (rawBody) bodyJson = JSON.parse(rawBody);
-        } catch { setCatalogError('Body JSON inválido'); return; }
+      setCatalogError(''); setCatalogSuccess('');
+      const id = document.getElementById('catalog-select').value;
+      const formId = document.getElementById('cat-id').value.trim() || id;
+      if (!formId) { setCatalogError('Informe um ID'); return; }
+      const formName = document.getElementById('cat-name').value.trim() || 'Sem nome';
+      const formType = document.getElementById('cat-type').value || 'http_service';
+      const formSubtype = document.getElementById('cat-subtype').value.trim() || undefined;
+      const formEnv = document.getElementById('cat-env').value.trim() || undefined;
+      let bodyJson, configJson;
+      try {
+        const rawBody = document.getElementById('cat-body').value.trim();
+        if (rawBody) bodyJson = JSON.parse(rawBody);
+      } catch { setCatalogError('Body JSON inválido'); return; }
         try {
           const rawCfg = document.getElementById('cat-config').value.trim();
           if (rawCfg) configJson = JSON.parse(rawCfg);
         } catch { setCatalogError('Config JSON inválido'); return; }
-        const payload = {
-          id,
-          connection: {
-            endpoint: document.getElementById('cat-endpoint').value.trim() || undefined,
-            method: document.getElementById('cat-method').value,
-            auth: (() => {
-              const mode = document.getElementById('cat-auth-mode').value;
+      const payload = {
+        id: formId,
+        name: formName,
+        type: formType,
+        subtype: formSubtype,
+        env: formEnv,
+        connection: {
+          endpoint: document.getElementById('cat-endpoint').value.trim() || undefined,
+          method: document.getElementById('cat-method').value,
+          auth: (() => {
+            const mode = document.getElementById('cat-auth-mode').value;
               const header = document.getElementById('cat-auth-header').value.trim();
               const token = document.getElementById('cat-auth-token').value.trim();
               if (!mode) return undefined;
@@ -743,7 +785,7 @@
           config: configJson
         };
         try {
-          const res = await fetch(`${API_BASE}/catalog/${id}`, {
+          const res = await fetch(`${API_BASE}/catalog/${formId}`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
