@@ -99,6 +99,12 @@ export class MemoryStore {
       this.status.set(resourceId, { ...st, consecutive_failures: 0 });
     }
   }
+
+  removeResource(resourceId: string): void {
+    this.resources.delete(resourceId);
+    this.status.delete(resourceId);
+    this.checks = this.checks.filter((c) => c.resource_id !== resourceId);
+  }
 }
 
 export const memoryStore = new MemoryStore();

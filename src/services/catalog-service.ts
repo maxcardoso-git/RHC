@@ -54,6 +54,16 @@ export class CatalogService {
     return this.cache.find((c) => c.id === id);
   }
 
+  delete(id: string): boolean {
+    const before = this.cache.length;
+    this.cache = this.cache.filter((c) => c.id !== id);
+    if (this.cache.length !== before) {
+      this.persist();
+      return true;
+    }
+    return false;
+  }
+
   upsert(entry: Partial<CatalogEntry> & { id: string }, source: CatalogSource = 'manual') {
     const now = new Date().toISOString();
     const existingIdx = this.cache.findIndex((c) => c.id === entry.id);

@@ -5,6 +5,7 @@ import { pickLocale } from '../i18n/index.js';
 import { HealthService } from '../services/health-service.js';
 import { ResourceRegistryClient } from '../services/resource-registry-client.js';
 import { CatalogService } from '../services/catalog-service.js';
+import { memoryStore } from '../stores/memory-store.js';
 
 function pickUserLocale(header?: string | string[]): Locale | undefined {
   if (!header) return undefined;
@@ -157,5 +158,16 @@ export async function registerRoutes(
     }
     const saved = deps.catalog.upsert({ ...existing, ...body, id: resourceId }, 'manual');
     reply.send(saved);
+  });
+
+  app.delete(`${base}/catalog/:resource_id`, async (request, reply) => {
+    const resourceId = (request.params as { resource_id: string }).resource_id;
+    const ok = deps.catalog.delete(resourceId);
+    memoryStore.removeResource(resourceId);
+    if (!ok) {
+      reply.code(404).send({ code: 'RESOURCE_NOT_FOUND' });
+      return;
+    }
+    reply.code(204).send();
   });
 }

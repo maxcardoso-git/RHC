@@ -240,6 +240,7 @@
         </div>
         <div class="catalog-actions">
           <button id="catalog-save">Salvar</button>
+          <button id="catalog-delete" class="secondary" style="border-color: var(--danger); color: var(--danger);">Remover</button>
           <div id="catalog-error" class="error small"></div>
           <div id="catalog-success" class="small" style="color:var(--ok);"></div>
         </div>
@@ -726,6 +727,29 @@
         } catch (err) {
           console.error(err);
           setCatalogError('Falha ao salvar');
+        }
+      });
+      document.getElementById('catalog-delete').addEventListener('click', async () => {
+        setCatalogError(''); setCatalogSuccess('');
+        const id = document.getElementById('catalog-select').value;
+        if (!id) { setCatalogError('Selecione um recurso'); return; }
+        if (!confirm('Remover este recurso do catálogo e parar monitoramento?')) return;
+        try {
+          const res = await fetch(`${API_BASE}/catalog/${id}`, { method: 'DELETE' });
+          if (!res.ok && res.status !== 404) throw new Error('Erro ao remover');
+          setCatalogSuccess('Removido');
+          await loadCatalog();
+          document.getElementById('cat-endpoint').value = '';
+          document.getElementById('cat-body').value = '';
+          document.getElementById('cat-config').value = '';
+          document.getElementById('cat-auth-mode').value = '';
+          document.getElementById('cat-auth-header').value = '';
+          document.getElementById('cat-auth-token').value = '';
+          currentCatalogEntry = null;
+          renderHints(null);
+        } catch (err) {
+          console.error(err);
+          setCatalogError('Falha ao remover');
         }
       });
       loadCatalog();
