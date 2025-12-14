@@ -617,7 +617,7 @@
     }
 
     // -------- Catalog UI --------
-    async function loadCatalog() {
+    async function loadCatalog(preferId) {
       try {
         const res = await fetch(`${API_BASE}/catalog`);
         const payload = await res.json();
@@ -631,8 +631,9 @@
           select.appendChild(opt);
         });
         if (catalogCache.length) {
-          select.value = catalogCache[0].id;
-          populateCatalogForm(catalogCache[0]);
+          const chosen = catalogCache.find((c) => c.id === preferId) || catalogCache[0];
+          select.value = chosen.id;
+          populateCatalogForm(chosen);
         }
       } catch (err) {
         console.error(err);
@@ -860,7 +861,7 @@
           const res = await fetch(`${API_BASE}/catalog/${id}`, { method: 'DELETE' });
           if (!res.ok && res.status !== 404) throw new Error('Erro ao remover');
           setCatalogSuccess('Removido');
-          await loadCatalog();
+          await loadCatalog(formId);
           document.getElementById('cat-endpoint').value = '';
           document.getElementById('cat-body').value = '';
           document.getElementById('cat-config').value = '';
