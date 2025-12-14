@@ -300,6 +300,10 @@
     let catalogCache = [];
     let currentCatalogEntry = null;
     const genId = () => (crypto.randomUUID ? crypto.randomUUID() : 'res-' + Math.random().toString(16).slice(2, 10));
+    const setEditLocks = (isExisting) => {
+      document.getElementById('cat-id').disabled = isExisting;
+      document.getElementById('cat-name').disabled = isExisting;
+    };
     const I18N = {
       'pt-BR': {
         runtimeDependencies: 'Dependências Runtime',
@@ -727,6 +731,8 @@
       document.getElementById('cat-subtype').value = entry.subtype || '';
       document.getElementById('cat-env').value = entry.env || '';
       renderHints(entry);
+      const exists = !!catalogCache.find((c) => c.id === entry.id);
+      setEditLocks(exists);
     }
 
     function selectCatalogResource(resourceId) {
@@ -766,6 +772,7 @@
         opt.textContent = `${blank.name} (${blank.type})`;
         select.appendChild(opt);
         select.value = newId;
+        setEditLocks(false);
       });
       document.getElementById('catalog-import').addEventListener('click', async () => {
         setCatalogError(''); setCatalogSuccess('');
