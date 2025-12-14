@@ -1,53 +1,56 @@
 import { MetricCollectorResult, ResourceDescriptor } from '../domain/types.js';
 import { logger } from '../utils/logger.js';
 
-function simulateLatency(base: number, variance: number): number {
-  const jitter = Math.random() * variance;
-  return Math.round(base + jitter);
-}
-
 export async function runCollector(resource: ResourceDescriptor): Promise<MetricCollectorResult> {
   switch (resource.type) {
     case 'database':
-      return {
-        metrics: {
-          connection_ok: true,
-          latency_ms: simulateLatency(90, 60),
-          replication_lag_ms: simulateLatency(200, 300)
-        },
-        debug: { simulated: true }
-      };
+      return await passiveCollector(resource, {
+        connection_ok: false,
+        latency_ms: null,
+        replication_lag_ms: null
+      });
     case 'llm_provider':
-      return {
-        metrics: {
-          availability: Math.random() > 0.05,
-          response_time_ms: simulateLatency(500, 1200),
-          error_rate_pct: Math.round(Math.random() * 3)
-        }
-      };
+      return await passiveCollector(resource, {
+        availability: false,
+        response_time_ms: null,
+        error_rate_pct: null
+      });
     case 'http_service':
       return await httpHealthCollector(resource);
     case 'cache_queue':
-      return {
-        metrics: {
-          ping_ok: true,
-          latency_ms: simulateLatency(20, 30),
-          queue_depth: Math.round(Math.random() * 50),
-          consumer_lag: Math.round(Math.random() * 10)
-        }
-      };
+      return await passiveCollector(resource, {
+        ping_ok: false,
+        latency_ms: null,
+        queue_depth: null,
+        consumer_lag: null
+      });
     case 'vector_db':
-      return {
-        metrics: {
-          index_available: true,
-          query_latency_ms: simulateLatency(60, 90),
-          insert_latency_ms: simulateLatency(80, 120),
-          collection_size: Math.round(Math.random() * 1000)
-        }
-      };
+      return await passiveCollector(resource, {
+        index_available: false,
+        query_latency_ms: null,
+        insert_latency_ms: null,
+        collection_size: null
+      });
     default:
       return { metrics: {} };
   }
+}
+
+async function passiveCollector(
+  resource: ResourceDescriptor,
+  defaultMetrics: Record<string, import('../domain/types.js').MetricValue | null>
+): Promise<MetricCollectorResult> {
+  const endpoint = (resource.connection as any)?.endpoint as string | undefined;
+  if (endpoint) {
+    return httpHealthCollector(resource);
+  }
+  const sanitized: Record<string, import('../domain/types.js').MetricValue> = {};
+  Object.entries(defaultMetrics).forEach(([k, v]) => {
+    if (v !== null && v !== undefined) {
+      sanitized[k] = v;
+    }
+  });
+  return { metrics: sanitized, debug: { note: 'no endpoint; passive metrics' } };
 }
 
 async function httpHealthCollector(resource: ResourceDescriptor): Promise<MetricCollectorResult> {
@@ -55,8 +58,8 @@ async function httpHealthCollector(resource: ResourceDescriptor): Promise<Metric
   if (!endpoint) {
     return {
       metrics: {
-        status_code: 200,
-        response_time_ms: simulateLatency(80, 100)
+        status_code: 503,
+        response_time_ms: 0
       }
     };
   }
