@@ -123,6 +123,9 @@
     .runtime-card { border: 1px solid var(--border); border-radius: 10px; padding: 10px; background: #0b1220; }
     .sortable { user-select: none; }
     .info-card { border: 1px solid var(--border); border-radius: 10px; padding: 10px; background: #0b1220; }
+    .input-row { display: grid; grid-template-columns: repeat(auto-fit,minmax(160px,1fr)); gap: 8px; }
+    textarea { width: 100%; min-height: 120px; background: #0b1220; border: 1px solid var(--border); color: #e5e7eb; border-radius: 8px; padding: 8px; font-family: monospace; font-size: 12px; }
+    .catalog-actions { display:flex; gap:8px; flex-wrap:wrap; }
     @media (max-width: 980px) {
       main { grid-template-columns: 1fr; }
     }
@@ -185,6 +188,60 @@
       <h2>Detalhes / Histórico</h2>
       <div id="detail" class="grid small muted">Selecione um recurso para ver histórico.</div>
     </section>
+    <section class="card">
+      <h2>Catálogo (editar)</h2>
+      <div class="controls">
+        <select id="catalog-select"></select>
+        <button id="catalog-refresh" class="secondary">Recarregar catálogo</button>
+        <button id="catalog-import" class="secondary">Importar snapshot do Registry</button>
+      </div>
+      <div class="grid small">
+        <div class="input-row">
+          <div>
+            <label>Endpoint</label>
+            <input id="cat-endpoint" type="text" placeholder="http://..." />
+          </div>
+          <div>
+            <label>Método</label>
+            <select id="cat-method">
+              <option value="GET">GET</option>
+              <option value="POST">POST</option>
+            </select>
+          </div>
+          <div>
+            <label>Auth</label>
+            <select id="cat-auth-mode">
+              <option value="">Nenhuma</option>
+              <option value="BEARER">Bearer</option>
+              <option value="API_KEY">API Key</option>
+            </select>
+          </div>
+          <div>
+            <label>Auth Header (API Key)</label>
+            <input id="cat-auth-header" type="text" placeholder="X-API-Key" />
+          </div>
+        </div>
+        <div class="input-row">
+          <div>
+            <label>Token/Valor</label>
+            <input id="cat-auth-token" type="text" placeholder="token ou valor do header" />
+          </div>
+          <div>
+            <label>Body (JSON opcional)</label>
+            <textarea id="cat-body" placeholder='{"ping":"ok"}'></textarea>
+          </div>
+          <div>
+            <label>Config extra (JSON opcional)</label>
+            <textarea id="cat-config" placeholder='{"model":"gpt-4o"}'></textarea>
+          </div>
+        </div>
+        <div class="catalog-actions">
+          <button id="catalog-save">Salvar</button>
+          <div id="catalog-error" class="error small"></div>
+          <div id="catalog-success" class="small" style="color:var(--ok);"></div>
+        </div>
+      </div>
+    </section>
   </main>
 
   <script>
@@ -196,6 +253,7 @@
     let sortDir = 'asc';
     let currentPage = 1;
     let pageSize = 10;
+    let catalogCache = [];
     const I18N = {
       'pt-BR': {
         runtimeDependencies: 'Dependências Runtime',
@@ -483,9 +541,118 @@
       });
     }
 
+    // -------- Catalog UI --------
+    async function loadCatalog() {
+      try {
+        const res = await fetch(`${API_BASE}/catalog`);
+        const payload = await res.json();
+        catalogCache = payload.items || [];
+        const select = document.getElementById('catalog-select');
+        select.innerHTML = '';
+        catalogCache.forEach((c) => {
+          const opt = document.createElement('option');
+          opt.value = c.id;
+          opt.textContent = `${c.name || c.id} (${c.type}${c.env ? '/' + c.env : ''})`;
+          select.appendChild(opt);
+        });
+        if (catalogCache.length) {
+          select.value = catalogCache[0].id;
+          populateCatalogForm(catalogCache[0]);
+        }
+      } catch (err) {
+        console.error(err);
+        setCatalogError('Falha ao carregar catálogo');
+      }
+    }
+
+    function setCatalogError(msg) {
+      document.getElementById('catalog-error').textContent = msg || '';
+    }
+    function setCatalogSuccess(msg) {
+      document.getElementById('catalog-success').textContent = msg || '';
+      if (msg) setTimeout(() => setCatalogSuccess(''), 2000);
+    }
+
+    function populateCatalogForm(entry) {
+      document.getElementById('catalog-select').value = entry.id;
+      document.getElementById('cat-endpoint').value = entry?.connection?.endpoint || entry?.config?.baseUrl || '';
+      document.getElementById('cat-method').value = (entry?.connection?.method || 'GET').toUpperCase();
+      const auth = entry?.connection?.auth || {};
+      document.getElementById('cat-auth-mode').value = auth.mode || auth.type || '';
+      document.getElementById('cat-auth-header').value = auth.header || '';
+      document.getElementById('cat-auth-token').value = auth.token || auth.value || '';
+      document.getElementById('cat-body').value = entry?.connection?.body ? JSON.stringify(entry.connection.body, null, 2) : '';
+      document.getElementById('cat-config').value = entry?.config ? JSON.stringify(entry.config, null, 2) : '';
+    }
+
+    function bindCatalog() {
+      document.getElementById('catalog-refresh').addEventListener('click', loadCatalog);
+      document.getElementById('catalog-import').addEventListener('click', async () => {
+        setCatalogError(''); setCatalogSuccess('');
+        try {
+          await fetch(`${API_BASE}/catalog/import`, { method: 'POST' });
+          setCatalogSuccess('Snapshot importado do Registry');
+          await loadCatalog();
+        } catch (err) {
+          console.error(err);
+          setCatalogError('Falha ao importar do Registry');
+        }
+      });
+      document.getElementById('catalog-select').addEventListener('change', (e) => {
+        const entry = catalogCache.find((c) => c.id === e.target.value);
+        if (entry) populateCatalogForm(entry);
+      });
+      document.getElementById('catalog-save').addEventListener('click', async () => {
+        setCatalogError(''); setCatalogSuccess('');
+        const id = document.getElementById('catalog-select').value;
+        if (!id) { setCatalogError('Selecione um recurso'); return; }
+        let bodyJson, configJson;
+        try {
+          const rawBody = document.getElementById('cat-body').value.trim();
+          if (rawBody) bodyJson = JSON.parse(rawBody);
+        } catch { setCatalogError('Body JSON inválido'); return; }
+        try {
+          const rawCfg = document.getElementById('cat-config').value.trim();
+          if (rawCfg) configJson = JSON.parse(rawCfg);
+        } catch { setCatalogError('Config JSON inválido'); return; }
+        const payload = {
+          id,
+          connection: {
+            endpoint: document.getElementById('cat-endpoint').value.trim() || undefined,
+            method: document.getElementById('cat-method').value,
+            auth: (() => {
+              const mode = document.getElementById('cat-auth-mode').value;
+              const header = document.getElementById('cat-auth-header').value.trim();
+              const token = document.getElementById('cat-auth-token').value.trim();
+              if (!mode) return undefined;
+              if (mode === 'API_KEY') return header && token ? { mode, header, value: token } : undefined;
+              return token ? { mode, token } : undefined;
+            })(),
+            body: bodyJson
+          },
+          config: configJson
+        };
+        try {
+          const res = await fetch(`${API_BASE}/catalog/${id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          if (!res.ok) throw new Error('Erro ao salvar');
+          setCatalogSuccess('Salvo');
+          await loadCatalog();
+        } catch (err) {
+          console.error(err);
+          setCatalogError('Falha ao salvar');
+        }
+      });
+      loadCatalog();
+    }
+
     (async function init() {
       setupControls();
       await loadStatus();
+      bindCatalog();
     })();
   </script>
 </body>
