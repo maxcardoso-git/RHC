@@ -129,6 +129,8 @@
     .hint-box { border:1px solid var(--border); border-radius:10px; padding:10px; background:#0b1220; margin-top:8px; }
     .hint-box h4 { margin:0 0 6px; font-size:13px; }
     .hint-box ul { margin:0; padding-left:16px; color: var(--muted); font-size:12px; line-height:1.4; }
+    .mini-btn { padding: 6px 10px; border-radius: 8px; border: 1px solid var(--border); background: transparent; color: #e5e7eb; cursor: pointer; font-size: 12px; }
+    .mini-btn:hover { background: rgba(255,255,255,0.04); }
     @media (max-width: 980px) {
       main { grid-template-columns: 1fr; }
     }
@@ -408,13 +410,14 @@
           <td>${statusPill(item.current_status)}</td>
           <td>${item.summary?.message || '-'}</td>
           <td>${formatDate(item.updated_at)}</td>
+          <td><button class=\"mini-btn btn-check\" data-id=\"${item.resource_id}\">Verificar</button></td>
         </tr>
       `).join('');
       container.innerHTML = `
         <table>
           <thead>
             <tr>
-              <th data-sort="resource_name" class="sortable">Recurso / ID</th><th data-sort="resource_type" class="sortable">Tipo / Env</th><th data-sort="resource_subtype" class="sortable">Subtype</th><th data-sort="current_status" class="sortable">Status</th><th>Resumo</th><th data-sort="updated_at" class="sortable">Atualizado</th>
+              <th data-sort=\"resource_name\" class=\"sortable\">Recurso / ID</th><th data-sort=\"resource_type\" class=\"sortable\">Tipo / Env</th><th data-sort=\"resource_subtype\" class=\"sortable\">Subtype</th><th data-sort=\"current_status\" class=\"sortable\">Status</th><th>Resumo</th><th data-sort=\"updated_at\" class=\"sortable\">Atualizado</th><th>Ação</th>
             </tr>
           </thead>
           <tbody>${rows}</tbody>
@@ -430,6 +433,29 @@
           selectCatalogResource(selected);
         });
       });
+      container.querySelectorAll('.btn-check').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const id = btn.getAttribute('data-id');
+          triggerCheck(id);
+        });
+      });
+    }
+
+    async function triggerCheck(resourceId) {
+      if (!resourceId) return;
+      try {
+        document.getElementById('error').textContent = '';
+        await fetch(`${API_BASE}/check/${resourceId}`, { method: 'POST' });
+        setCatalogSuccess('Check disparado');
+        await loadStatus();
+        if (selected === resourceId) {
+          await loadDetail(resourceId);
+        }
+      } catch (err) {
+        console.error(err);
+        document.getElementById('error').textContent = 'Erro ao disparar verificação';
+      }
     }
 
     async function loadDetail(resourceId) {
