@@ -418,6 +418,7 @@
         row.addEventListener('click', () => {
           selected = row.getAttribute('data-id');
           loadDetail(selected);
+          selectCatalogResource(selected);
         });
       });
     }
@@ -583,6 +584,21 @@
       document.getElementById('cat-auth-token').value = auth.token || auth.value || '';
       document.getElementById('cat-body').value = entry?.connection?.body ? JSON.stringify(entry.connection.body, null, 2) : '';
       document.getElementById('cat-config').value = entry?.config ? JSON.stringify(entry.config, null, 2) : '';
+    }
+
+    function selectCatalogResource(resourceId) {
+      if (!resourceId) return;
+      if (!catalogCache.length) {
+        loadCatalog().then(() => selectCatalogResource(resourceId));
+        return;
+      }
+      const entry = catalogCache.find((c) => c.id === resourceId);
+      if (entry) {
+        populateCatalogForm(entry);
+        setCatalogError('');
+      } else {
+        setCatalogError('Recurso não está no catálogo (importe ou crie).');
+      }
     }
 
     function bindCatalog() {
