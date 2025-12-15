@@ -993,6 +993,14 @@
           enabled: true,
           connection: {
             endpoint: document.getElementById('formEndpoint').value
+          },
+          policy: {
+            enabled: true,
+            schedule: {
+              type: 'INTERVAL',
+              value: 'PT30S'
+            },
+            timeout: 'PT5S'
           }
         };
 
