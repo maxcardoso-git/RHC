@@ -111,6 +111,29 @@
       to { opacity: 1; transform: translateY(0); }
     }
 
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .nav-link {
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+      color: white;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.875rem;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 12px rgba(6, 182, 212, 0.3);
+    }
+
+    .nav-link:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 16px rgba(6, 182, 212, 0.5);
+    }
+
     /* Main Layout */
     main {
       padding: 2rem;
@@ -559,6 +582,9 @@
       </div>
       <span class="status-pill" id="resourceCount">NOC Monitor</span>
     </div>
+    <div class="header-right">
+      <a href="/ui/dashboard.html" class="nav-link">📊 Dashboard NOC</a>
+    </div>
   </header>
 
   <main>
@@ -842,25 +868,46 @@
     }
 
     async function saveResource() {
-      const resource = {
-        id: document.getElementById('formId').value,
-        name: document.getElementById('formName').value,
-        type: document.getElementById('formType').value,
-        env: document.getElementById('formEnv').value,
-        enabled: true,
-        connection: {
-          endpoint: document.getElementById('formEndpoint').value
+      try {
+        const resource = {
+          id: document.getElementById('formId').value,
+          name: document.getElementById('formName').value,
+          type: document.getElementById('formType').value,
+          env: document.getElementById('formEnv').value,
+          enabled: true,
+          connection: {
+            endpoint: document.getElementById('formEndpoint').value
+          }
+        };
+
+        // Validate required fields
+        if (!resource.id || !resource.name || !resource.type) {
+          alert('Por favor, preencha ID, Nome e Tipo do recurso.');
+          return;
         }
-      };
 
-      await fetch(`${API_BASE}/catalog`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(resource)
-      });
+        const response = await fetch(`${API_BASE}/catalog`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(resource)
+        });
 
-      cancelEdit();
-      loadCatalog();
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.code || 'Erro ao salvar recurso');
+        }
+
+        const saved = await response.json();
+        console.log('Recurso salvo com sucesso:', saved);
+        alert('✅ Recurso salvo com sucesso!');
+
+        cancelEdit();
+        await loadCatalog();
+        await refreshStatus();
+      } catch (error) {
+        console.error('Erro ao salvar recurso:', error);
+        alert('❌ Erro ao salvar recurso: ' + error.message);
+      }
     }
 
     async function deleteResource() {
