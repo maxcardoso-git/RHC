@@ -31,6 +31,15 @@ export function buildServer(cfg: AppConfig, deps: { healthService: HealthService
   });
 
   app.addHook('onRequest', async (request, reply) => {
+    // Skip auth for public routes
+    const publicRoutes = ['/ui', '/healthz', '/'];
+    const isPublicRoute = publicRoutes.some(route =>
+      request.url === route || request.url.startsWith(route + '/')
+    );
+
+    if (isPublicRoute) return;
+
+    // Require API key for protected routes
     if (!cfg.apiKey) return;
     const headerKey = request.headers['x-internal-api-key'];
     if (headerKey !== cfg.apiKey) {
