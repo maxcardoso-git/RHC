@@ -31,15 +31,15 @@ export function buildServer(cfg: AppConfig, deps: { healthService: HealthService
   });
 
   app.addHook('onRequest', async (request, reply) => {
-    // Skip auth for public routes
-    const publicRoutes = ['/ui', '/healthz', '/'];
+    // Skip auth for public routes (NOC internal use - UI and API)
+    const publicRoutes = ['/ui', '/healthz', '/', '/api'];
     const isPublicRoute = publicRoutes.some(route =>
       request.url === route || request.url.startsWith(route + '/')
     );
 
     if (isPublicRoute) return;
 
-    // Require API key for protected routes
+    // Require API key for other protected routes
     if (!cfg.apiKey) return;
     const headerKey = request.headers['x-internal-api-key'];
     if (headerKey !== cfg.apiKey) {
