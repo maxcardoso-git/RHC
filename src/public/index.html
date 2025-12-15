@@ -3,886 +3,884 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Resource Health Checker</title>
+  <title>RHC - Resource Health Checker</title>
   <link rel="icon" type="image/png" href="/ui/logo.png" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #0f172a;
-      --panel: #111827;
-      --muted: #94a3b8;
-      --accent: #22d3ee;
-      --accent-2: #a855f7;
-      --danger: #f87171;
-      --warn: #f59e0b;
-      --ok: #34d399;
-      --border: #1f2937;
-      --font: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --bg-primary: #0a0e1a;
+      --bg-secondary: #111827;
+      --bg-card: #1a1f2e;
+      --bg-hover: #1f2937;
+      --text-primary: #f9fafb;
+      --text-secondary: #9ca3af;
+      --text-muted: #6b7280;
+      --accent-cyan: #06b6d4;
+      --accent-purple: #8b5cf6;
+      --accent-pink: #ec4899;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --border: rgba(255, 255, 255, 0.1);
+      --border-hover: rgba(255, 255, 255, 0.2);
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+      --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+      --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.5);
     }
-    * { box-sizing: border-box; }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
     body {
       margin: 0;
-      background: radial-gradient(circle at 20% 20%, rgba(34, 211, 238, 0.08), transparent 25%),
-                  radial-gradient(circle at 80% 0%, rgba(168, 85, 247, 0.08), transparent 30%),
-                  var(--bg);
-      color: #e2e8f0;
-      font-family: var(--font);
+      background:
+        radial-gradient(ellipse 80% 50% at 20% 10%, rgba(6, 182, 212, 0.1), transparent),
+        radial-gradient(ellipse 60% 40% at 80% 80%, rgba(139, 92, 246, 0.1), transparent),
+        linear-gradient(180deg, var(--bg-primary) 0%, #0f1419 100%);
+      color: var(--text-primary);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       min-height: 100vh;
+      line-height: 1.6;
     }
+
+    /* Header */
     header {
-      padding: 24px 32px;
+      padding: 1.5rem 2rem;
+      background: rgba(26, 31, 46, 0.6);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 16px;
+      gap: 1rem;
+      position: sticky;
+      top: 0;
+      z-index: 100;
     }
-    .title {
-      font-size: 24px;
-      font-weight: 700;
-      letter-spacing: -0.02em;
+
+    .header-left {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 1rem;
     }
+
+    .logo-container {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
     .logo {
-      width: 38px;
-      height: 38px;
+      width: 40px;
+      height: 40px;
       object-fit: contain;
-      filter: drop-shadow(0 0 6px rgba(34, 211, 238, 0.3));
-      border-radius: 8px;
+      filter: drop-shadow(0 0 10px rgba(6, 182, 212, 0.5));
+      animation: pulse 3s ease-in-out infinite;
     }
-    .pill {
-      padding: 6px 12px;
+
+    @keyframes pulse {
+      0%, 100% { filter: drop-shadow(0 0 10px rgba(6, 182, 212, 0.5)); }
+      50% { filter: drop-shadow(0 0 20px rgba(6, 182, 212, 0.8)); }
+    }
+
+    .title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .status-pill {
+      padding: 0.375rem 0.875rem;
       border-radius: 999px;
-      background: rgba(34, 211, 238, 0.12);
-      color: var(--accent);
+      background: rgba(6, 182, 212, 0.15);
+      color: var(--accent-cyan);
       font-weight: 600;
-      border: 1px solid rgba(34, 211, 238, 0.2);
-      font-size: 12px;
+      font-size: 0.75rem;
+      border: 1px solid rgba(6, 182, 212, 0.3);
+      animation: slideIn 0.3s ease-out;
     }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Main Layout */
     main {
-      padding: 0 32px 32px;
+      padding: 2rem;
       display: grid;
-      grid-template-columns: 2fr 1fr;
-      gap: 16px;
+      grid-template-columns: 1fr 400px;
+      gap: 1.5rem;
+      max-width: 1800px;
+      margin: 0 auto;
     }
+
+    @media (max-width: 1200px) {
+      main {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Cards */
     .card {
-      background: var(--panel);
+      background: var(--bg-card);
       border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 16px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+      border-radius: 16px;
+      padding: 1.5rem;
+      box-shadow: var(--shadow-md);
+      transition: all 0.3s ease;
+      animation: fadeIn 0.5s ease-out;
     }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .card:hover {
+      border-color: var(--border-hover);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.25rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid var(--border);
+    }
+
     h2 {
-      margin: 0 0 12px;
-      font-size: 16px;
-      letter-spacing: -0.01em;
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
     }
+
+    h2::before {
+      content: '';
+      width: 4px;
+      height: 1.25rem;
+      background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+      border-radius: 2px;
+    }
+
+    /* Controls */
     .controls {
       display: flex;
       flex-wrap: wrap;
-      gap: 8px;
-      margin-bottom: 12px;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
     }
-    select, button, input[type=\"number\"] {
-      background: #0b1220;
+
+    select, button, input[type="number"], input[type="text"], textarea {
+      background: var(--bg-secondary);
       border: 1px solid var(--border);
-      color: #e5e7eb;
-      padding: 8px 10px;
-      border-radius: 8px;
-      font-size: 13px;
+      color: var(--text-primary);
+      padding: 0.625rem 1rem;
+      border-radius: 10px;
+      font-size: 0.875rem;
+      font-family: inherit;
+      transition: all 0.2s ease;
     }
+
+    select:hover, input:hover, textarea:hover {
+      border-color: var(--border-hover);
+      background: var(--bg-hover);
+    }
+
+    select:focus, input:focus, textarea:focus {
+      outline: none;
+      border-color: var(--accent-cyan);
+      box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.1);
+    }
+
     button {
-      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
       border: none;
-      font-weight: 700;
+      font-weight: 600;
       cursor: pointer;
-      color: #0b1220;
-      transition: transform 0.1s ease, box-shadow 0.2s ease;
+      color: white;
+      transition: all 0.2s ease;
+      position: relative;
+      overflow: hidden;
     }
-    button:hover { transform: translateY(-1px); box-shadow: 0 10px 20px rgba(34, 211, 238, 0.25); }
-    button.secondary { background: transparent; border: 1px solid var(--border); color: #e5e7eb; box-shadow: none; }
-    table { width: 100%; border-collapse: collapse; }
-    th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--border); font-size: 13px; }
-    th { color: var(--muted); font-weight: 600; }
-    tr:hover { background: rgba(255, 255, 255, 0.02); }
-    .status { padding: 4px 8px; border-radius: 8px; font-weight: 700; font-size: 12px; display: inline-block; }
-    .status.UP { color: var(--ok); background: rgba(52, 211, 153, 0.12); }
-    .status.DEGRADED { color: var(--warn); background: rgba(245, 158, 11, 0.12); }
-    .status.DOWN { color: var(--danger); background: rgba(248, 113, 113, 0.12); }
-    .badge { background: rgba(148, 163, 184, 0.15); color: #cbd5e1; padding: 4px 8px; border-radius: 8px; margin-right: 4px; font-size: 12px; }
-    .history { max-height: 360px; overflow-y: auto; }
-    .muted { color: var(--muted); }
-    .flex { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-    .small { font-size: 12px; }
-    .grid { display: grid; gap: 8px; }
-    .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 8px; }
-    .metric { padding: 8px; border-radius: 10px; background: #0b1220; border: 1px solid var(--border); }
-    .metric label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 4px; }
-    .metric .value { font-weight: 700; font-size: 14px; }
-    .error { color: var(--danger); }
-    .runtime-card { border: 1px solid var(--border); border-radius: 10px; padding: 10px; background: #0b1220; }
-    .sortable { user-select: none; }
-    .info-card { border: 1px solid var(--border); border-radius: 10px; padding: 10px; background: #0b1220; }
-    .input-row { display: grid; grid-template-columns: repeat(auto-fit,minmax(160px,1fr)); gap: 8px; }
-    textarea { width: 100%; min-height: 120px; background: #0b1220; border: 1px solid var(--border); color: #e5e7eb; border-radius: 8px; padding: 8px; font-family: monospace; font-size: 12px; }
-    .catalog-actions { display:flex; gap:8px; flex-wrap:wrap; }
-    .hint-box { border:1px solid var(--border); border-radius:10px; padding:10px; background:#0b1220; margin-top:8px; }
-    .hint-box h4 { margin:0 0 6px; font-size:13px; }
-    .hint-box ul { margin:0; padding-left:16px; color: var(--muted); font-size:12px; line-height:1.4; }
-    .mini-btn { padding: 6px 10px; border-radius: 8px; border: 1px solid var(--border); background: transparent; color: #e5e7eb; cursor: pointer; font-size: 12px; }
-    .mini-btn:hover { background: rgba(255,255,255,0.04); }
-    @media (max-width: 980px) {
-      main { grid-template-columns: 1fr; }
+
+    button::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.3);
+      transform: translate(-50%, -50%);
+      transition: width 0.6s, height 0.6s;
+    }
+
+    button:hover::before {
+      width: 300px;
+      height: 300px;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(6, 182, 212, 0.4);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    button.secondary {
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+    }
+
+    button.secondary:hover {
+      background: var(--bg-hover);
+      box-shadow: var(--shadow-sm);
+    }
+
+    button.danger {
+      background: linear-gradient(135deg, var(--danger), #dc2626);
+    }
+
+    button.danger:hover {
+      box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
+    }
+
+    /* Status Table */
+    .table-container {
+      overflow-x: auto;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th {
+      background: var(--bg-secondary);
+      padding: 1rem;
+      text-align: left;
+      font-weight: 600;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-secondary);
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      user-select: none;
+    }
+
+    th:hover {
+      background: var(--bg-hover);
+      color: var(--text-primary);
+    }
+
+    td {
+      padding: 1rem;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.875rem;
+    }
+
+    tr {
+      transition: all 0.2s ease;
+    }
+
+    tr:hover {
+      background: var(--bg-hover);
+    }
+
+    tbody tr {
+      cursor: pointer;
+    }
+
+    tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    /* Status Badges */
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.375rem 0.875rem;
+      border-radius: 999px;
+      font-weight: 600;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .status-badge::before {
+      content: '';
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      animation: statusPulse 2s ease-in-out infinite;
+    }
+
+    @keyframes statusPulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.9); }
+    }
+
+    .status-UP {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--success);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .status-UP::before {
+      background: var(--success);
+      box-shadow: 0 0 10px var(--success);
+    }
+
+    .status-DEGRADED {
+      background: rgba(245, 158, 11, 0.15);
+      color: var(--warning);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+
+    .status-DEGRADED::before {
+      background: var(--warning);
+      box-shadow: 0 0 10px var(--warning);
+    }
+
+    .status-DOWN {
+      background: rgba(239, 68, 68, 0.15);
+      color: var(--danger);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    .status-DOWN::before {
+      background: var(--danger);
+      box-shadow: 0 0 10px var(--danger);
+    }
+
+    /* Form Groups */
+    .form-group {
+      margin-bottom: 1rem;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--text-secondary);
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+    }
+
+    textarea {
+      min-height: 100px;
+      resize: vertical;
+      font-family: 'Courier New', monospace;
+    }
+
+    /* Detail Panel */
+    #detailPanel {
+      display: none;
+      animation: slideInRight 0.3s ease-out;
+    }
+
+    @keyframes slideInRight {
+      from { opacity: 0; transform: translateX(20px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    .detail-section {
+      margin-bottom: 1.5rem;
+    }
+
+    .detail-section h3 {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .detail-info {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1rem;
+    }
+
+    .detail-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .detail-row:last-child {
+      border-bottom: none;
+    }
+
+    .detail-label {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+    }
+
+    .detail-value {
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+
+    /* Pagination */
+    .pagination {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border);
+    }
+
+    .pagination-info {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+    }
+
+    .pagination-controls {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    /* Loading States */
+    .loading {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent-cyan);
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: var(--text-muted);
+    }
+
+    .empty-state-icon {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+      opacity: 0.5;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      main {
+        padding: 1rem;
+        gap: 1rem;
+      }
+
+      .controls {
+        flex-direction: column;
+      }
+
+      .controls > * {
+        width: 100%;
+      }
+
+      table {
+        font-size: 0.75rem;
+      }
+
+      th, td {
+        padding: 0.75rem 0.5rem;
+      }
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: var(--bg-secondary);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--border-hover);
     }
   </style>
 </head>
 <body>
   <header>
-    <div class="title"><img src="/ui/logo.png" alt="RHC logo" class="logo" />Resource Health Checker <span class="pill">LIVE</span></div>
-    <div class="flex small">
-      <a href="/ui/dashboard.html" class="muted" style="text-decoration:none;padding:8px 12px;border:1px solid var(--border);border-radius:8px;">Ir para Dashboard</a>
-      <label for="locale">Idioma</label>
-      <select id="locale">
-        <option value="pt-BR">pt-BR</option>
-        <option value="en-US">en-US</option>
-        <option value="es-ES">es-ES</option>
-      </select>
-      <label for="interval">Auto-refresh (s)</label>
-      <input id="interval" type="number" value="10" min="5" max="120" />
-      <button id="toggle-auto">Ativar</button>
-      <button id="refresh" class="secondary">Atualizar</button>
+    <div class="header-left">
+      <div class="logo-container">
+        <img src="/ui/logo.png" alt="RHC Logo" class="logo" />
+        <h1 class="title">Resource Health Checker</h1>
+      </div>
+      <span class="status-pill" id="resourceCount">NOC Monitor</span>
     </div>
   </header>
+
   <main>
-    <section class="card">
-      <h2>Status dos Recursos</h2>
+    <div class="card">
+      <div class="card-header">
+        <h2>📊 Status dos Recursos</h2>
+        <button onclick="refreshStatus()" class="secondary">Atualizar</button>
+      </div>
+
       <div class="controls">
-        <select id="filter-status">
-          <option value="">Status</option>
+        <select id="filterStatus" onchange="refreshStatus()">
+          <option value="">Status: Todos</option>
           <option value="UP">UP</option>
           <option value="DEGRADED">DEGRADED</option>
           <option value="DOWN">DOWN</option>
         </select>
-        <select id="filter-type">
-          <option value="">Tipo</option>
-          <option value="database">database</option>
-          <option value="cache_queue">cache_queue</option>
-          <option value="http_service">http_service</option>
-          <option value="llm_provider">llm_provider</option>
-          <option value="vector_db">vector_db</option>
+        <select id="filterType" onchange="refreshStatus()">
+          <option value="">Tipo: Todos</option>
+          <option value="database">Database</option>
+          <option value="http_service">HTTP Service</option>
+          <option value="cache_queue">Cache/Queue</option>
+          <option value="llm_provider">LLM Provider</option>
+          <option value="vector_db">Vector DB</option>
         </select>
-        <button id="apply-filters" class="secondary">Filtrar</button>
+        <select id="filterEnv" onchange="refreshStatus()">
+          <option value="">Ambiente: Todos</option>
+          <option value="production">Production</option>
+          <option value="staging">Staging</option>
+          <option value="development">Development</option>
+        </select>
+        <select id="pageSize" onchange="refreshStatus()">
+          <option value="10">10 por página</option>
+          <option value="20" selected>20 por página</option>
+          <option value="50">50 por página</option>
+        </select>
       </div>
-      <div id="table-container"></div>
-      <div class="flex small" style="justify-content: space-between; margin-top:8px;">
-        <div id="page-info" class="muted">Página 1</div>
-        <div class="flex" style="gap:6px;">
-          <label for="page-size" class="muted">Linhas</label>
-          <select id="page-size">
-            <option value="5">5</option>
-            <option value="10" selected>10</option>
-            <option value="20">20</option>
-            <option value="50">50</option>
+
+      <div class="table-container">
+        <table id="statusTable">
+          <thead>
+            <tr>
+              <th onclick="sortTable(0)">Recurso</th>
+              <th onclick="sortTable(1)">Tipo</th>
+              <th onclick="sortTable(2)">Ambiente</th>
+              <th onclick="sortTable(3)">Status</th>
+              <th onclick="sortTable(4)">Última Verificação</th>
+              <th>Ação</th>
+            </tr>
+          </thead>
+          <tbody id="statusBody">
+            <tr>
+              <td colspan="6" class="empty-state">
+                <div class="empty-state-icon">📡</div>
+                <p>Carregando recursos...</p>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="pagination">
+        <div class="pagination-info" id="paginationInfo">Mostrando 0 de 0 recursos</div>
+        <div class="pagination-controls">
+          <button onclick="previousPage()" class="secondary">← Anterior</button>
+          <button onclick="nextPage()" class="secondary">Próxima →</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" id="catalogPanel">
+      <div class="card-header">
+        <h2>⚙️ Gerenciar Catálogo</h2>
+        <button onclick="importFromRegistry()" class="secondary">Importar</button>
+      </div>
+
+      <div class="form-group">
+        <label>Selecionar Recurso</label>
+        <select id="resourceSelect" onchange="loadResourceDetail()">
+          <option value="">Selecione...</option>
+        </select>
+      </div>
+
+      <button onclick="createNewResource()">+ Novo Recurso</button>
+
+      <div id="catalogForm" style="display:none; margin-top: 1.5rem;">
+        <div class="form-group">
+          <label>ID</label>
+          <input type="text" id="formId" placeholder="ex: prod-postgres-main" />
+        </div>
+        <div class="form-group">
+          <label>Nome</label>
+          <input type="text" id="formName" placeholder="ex: Production PostgreSQL" />
+        </div>
+        <div class="form-group">
+          <label>Tipo</label>
+          <select id="formType">
+            <option value="database">Database</option>
+            <option value="http_service">HTTP Service</option>
+            <option value="cache_queue">Cache/Queue</option>
+            <option value="llm_provider">LLM Provider</option>
+            <option value="vector_db">Vector DB</option>
           </select>
-          <button id="prev-page" class="secondary">Anterior</button>
-          <button id="next-page" class="secondary">Próxima</button>
+        </div>
+        <div class="form-group">
+          <label>Ambiente</label>
+          <select id="formEnv">
+            <option value="production">Production</option>
+            <option value="staging">Staging</option>
+            <option value="development">Development</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Endpoint</label>
+          <input type="text" id="formEndpoint" placeholder="http://localhost:5432/health" />
+        </div>
+        <div class="controls">
+          <button onclick="saveResource()">Salvar</button>
+          <button onclick="deleteResource()" class="danger">Excluir</button>
+          <button onclick="cancelEdit()" class="secondary">Cancelar</button>
         </div>
       </div>
-      <div id="error" class="error small"></div>
-    </section>
-    <section class="card">
-      <h2>Detalhes / Histórico</h2>
-      <div id="detail" class="grid small muted">Selecione um recurso para ver histórico.</div>
-    </section>
-    <section class="card">
-      <h2>Catálogo (editar)</h2>
-      <div class="controls">
-        <select id="catalog-select"></select>
-        <button id="catalog-new" class="secondary">Novo item</button>
-        <button id="catalog-refresh" class="secondary">Recarregar catálogo</button>
-        <button id="catalog-import" class="secondary">Importar snapshot do Registry</button>
+    </div>
+
+    <div class="card" id="detailPanel">
+      <div class="card-header">
+        <h2>📈 Detalhes do Recurso</h2>
+        <button onclick="closeDetail()" class="secondary">Fechar</button>
       </div>
-      <div class="grid small">
-        <div class="input-row">
-          <div>
-            <label>ID</label>
-            <input id="cat-id" type="text" placeholder="uuid ou slug" />
-          </div>
-          <div>
-            <label>Nome</label>
-            <input id="cat-name" type="text" placeholder="Nome do recurso" />
-          </div>
-          <div>
-            <label>Tipo</label>
-            <div class="flex" style="gap:6px;">
-              <select id="cat-type">
-                <option value="http_service">http_service</option>
-                <option value="database">database</option>
-                <option value="cache_queue">cache_queue</option>
-                <option value="llm_provider">llm_provider</option>
-                <option value="vector_db">vector_db</option>
-                <option value="custom">Outro (digite)</option>
-              </select>
-              <input id="cat-type-custom" type="text" placeholder="custom type" style="width:120px; display:none;" />
-            </div>
-          </div>
-          <div>
-            <label>Subtype</label>
-            <input id="cat-subtype" type="text" placeholder="ex: postgres, external_api" />
-          </div>
-          <div>
-            <label>Ambiente (env)</label>
-            <input id="cat-env" type="text" placeholder="DEV/PRD" />
-          </div>
-        </div>
-        <div class="input-row">
-          <div>
-            <label>Endpoint</label>
-            <input id="cat-endpoint" type="text" placeholder="http://..." />
-          </div>
-          <div>
-            <label>Método</label>
-            <select id="cat-method">
-              <option value="GET">GET</option>
-              <option value="POST">POST</option>
-            </select>
-          </div>
-          <div>
-            <label>Auth</label>
-            <select id="cat-auth-mode">
-              <option value="">Nenhuma</option>
-              <option value="BEARER">Bearer</option>
-              <option value="API_KEY">API Key</option>
-            </select>
-          </div>
-          <div>
-            <label>Auth Header (API Key)</label>
-            <input id="cat-auth-header" type="text" placeholder="X-API-Key" />
-          </div>
-        </div>
-        <div class="input-row">
-          <div>
-            <label>Token/Valor</label>
-            <input id="cat-auth-token" type="text" placeholder="token ou valor do header" />
-          </div>
-          <div>
-            <label>Body (JSON opcional)</label>
-            <textarea id="cat-body" placeholder='{"ping":"ok"}'></textarea>
-          </div>
-          <div>
-            <label>Config extra (JSON opcional)</label>
-            <textarea id="cat-config" placeholder='{"model":"gpt-4o"}'></textarea>
-          </div>
-        </div>
-        <div class="catalog-actions">
-          <button id="catalog-save">Salvar</button>
-          <button id="catalog-delete" class="secondary" style="border-color: var(--danger); color: var(--danger);">Remover</button>
-          <div id="catalog-error" class="error small"></div>
-          <div id="catalog-success" class="small" style="color:var(--ok);"></div>
-        </div>
-        <div class="hint-box">
-          <h4>Guia para preenchimento</h4>
-          <div id="catalog-hints" class="small muted">Selecione um recurso para ver dicas de endpoint/auth/body por tipo.</div>
-        </div>
-      </div>
-    </section>
+      <div id="detailContent"></div>
+    </div>
   </main>
 
   <script>
     const API_BASE = '/api/v1/resource-health';
-    let autoInterval = null;
-    let selected = null;
-    let itemsCache = [];
-    let sortKey = null;
-    let sortDir = 'asc';
-    let currentPage = 1;
-    let pageSize = 10;
-    let catalogCache = [];
-    let currentCatalogEntry = null;
-    const genId = () => (crypto.randomUUID ? crypto.randomUUID() : 'res-' + Math.random().toString(16).slice(2, 10));
-    const setEditLocks = (isExisting) => {
-      document.getElementById('cat-id').disabled = isExisting;
-      document.getElementById('cat-name').disabled = isExisting;
-    };
-    const I18N = {
-      'pt-BR': {
-        runtimeDependencies: 'Dependências Runtime',
-        prismaOrm: 'Prisma ORM',
-        connection: 'Conexão',
-        poolExhausted: 'Pool exausto',
-        latencyP95: 'Latência p95',
-        latencyAvg: 'Latência média',
-        errorRate: 'Taxa de erro (5 min)',
-        lastErrorCode: 'Último código de erro'
-      },
-      'en-US': {
-        runtimeDependencies: 'Runtime Dependencies',
-        prismaOrm: 'Prisma ORM',
-        connection: 'Connection',
-        poolExhausted: 'Pool exhausted',
-        latencyP95: 'Latency p95',
-        latencyAvg: 'Avg latency',
-        errorRate: 'Error rate (5m)',
-        lastErrorCode: 'Last error code'
-      },
-      'es-ES': {
-        runtimeDependencies: 'Dependencias Runtime',
-        prismaOrm: 'Prisma ORM',
-        connection: 'Conexión',
-        poolExhausted: 'Pool agotado',
-        latencyP95: 'Latencia p95',
-        latencyAvg: 'Latencia media',
-        errorRate: 'Tasa de error (5m)',
-        lastErrorCode: 'Último código de error'
-      }
-    };
+    let currentPage = 0;
+    let currentData = [];
 
-    function i18n(key) {
-      const locale = document.getElementById('locale').value || 'pt-BR';
-      return (I18N[locale] && I18N[locale][key]) || I18N['pt-BR'][key] || key;
-    }
+    async function refreshStatus() {
+      const status = document.getElementById('filterStatus').value;
+      const type = document.getElementById('filterType').value;
+      const env = document.getElementById('filterEnv').value;
+      const pageSize = parseInt(document.getElementById('pageSize').value);
 
-    function updateTypeOptions(items) {
-      const select = document.getElementById('filter-type');
-      const current = select.value;
-      const types = new Set(['', 'database', 'cache_queue', 'http_service', 'llm_provider', 'vector_db']);
-      items.forEach(item => types.add(item.resource_type));
-      select.innerHTML = '';
-      types.forEach((t) => {
-        const opt = document.createElement('option');
-        opt.value = t;
-        opt.textContent = t || 'Tipo';
-        if (t === current) opt.selected = true;
-        select.appendChild(opt);
-      });
-    }
-
-    function statusPill(status) {
-      return `<span class=\"status ${status}\">${status}</span>`;
-    }
-
-    function formatDate(ts) {
-      if (!ts) return '-';
-      return new Date(ts).toLocaleString();
-    }
-
-    async function fetchJSON(path) {
-      const locale = document.getElementById('locale').value;
-      const res = await fetch(path, { headers: { 'Accept-Language': locale } });
-      if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
-      return res.json();
-    }
-
-    async function loadStatus() {
-      const statusFilter = document.getElementById('filter-status').value;
-      const typeFilter = document.getElementById('filter-type').value;
       const params = new URLSearchParams();
-      if (statusFilter) params.set('status', statusFilter);
-      if (typeFilter) params.set('type', typeFilter);
-      params.set('limit', '500');
-      try {
-        document.getElementById('error').textContent = '';
-        const data = await fetchJSON(`${API_BASE}/status?${params.toString()}`);
-        itemsCache = data.items || [];
-        updateTypeOptions(itemsCache);
-        currentPage = 1;
-        renderTable(applyPaging(applySorting(itemsCache)));
-      } catch (e) {
-        document.getElementById('error').textContent = 'Erro ao carregar status: ' + e.message;
-      }
-    }
+      if (status) params.append('status', status);
+      if (type) params.append('type', type);
+      if (env) params.append('env', env);
+      params.append('limit', pageSize);
+      params.append('offset', currentPage * pageSize);
 
-    function applySorting(items) {
-      if (!sortKey) return items.slice();
-      const sorted = items.slice().sort((a,b) => {
-        const av = a[sortKey] || '';
-        const bv = b[sortKey] || '';
-        if (sortKey === 'updated_at' || sortKey === 'last_check_at') {
-          return (new Date(av)).getTime() - (new Date(bv)).getTime();
-        }
-        if (typeof av === 'string' && typeof bv === 'string') {
-          return av.localeCompare(bv);
-        }
-        return av > bv ? 1 : av < bv ? -1 : 0;
-      });
-      if (sortDir === 'desc') sorted.reverse();
-      return sorted;
-    }
+      const res = await fetch(`${API_BASE}/status?${params}`);
+      const data = await res.json();
 
-    function applyPaging(items) {
-      const start = (currentPage - 1) * pageSize;
-      const pageItems = items.slice(start, start + pageSize);
-      updatePageInfo(items.length);
-      return pageItems;
-    }
-
-    function updatePageInfo(total) {
-      const info = document.getElementById('page-info');
-      const totalPages = Math.max(1, Math.ceil(total / pageSize));
-      if (currentPage > totalPages) currentPage = totalPages;
-      info.textContent = `Página ${currentPage} de ${totalPages} (${total} recursos)`;
-      document.getElementById('prev-page').disabled = currentPage <= 1;
-      document.getElementById('next-page').disabled = currentPage >= totalPages;
-    }
-
-    function handleSort(key) {
-      if (sortKey === key) {
-        sortDir = sortDir === 'asc' ? 'desc' : 'asc';
-      } else {
-        sortKey = key;
-        sortDir = 'asc';
-      }
-      renderTable(applyPaging(applySorting(itemsCache)));
-    }
-
-    function renderTable(items) {
-      const container = document.getElementById('table-container');
-      if (!items.length) {
-        container.innerHTML = '<div class=\"muted small\">Nenhum recurso encontrado.</div>';
-        return;
-      }
-      const rows = items.map(item => `
-        <tr data-id=\"${item.resource_id}\">
-          <td><div style=\"font-weight:700;\">${item.resource_name || item.resource_id}</div><div class=\"muted small\">${item.resource_id}</div></td>
-          <td>${item.resource_type}${item.env ? ` / ${item.env}` : ''}</td>
-          <td>${item.resource_subtype || '-'}</td>
-          <td>${statusPill(item.current_status)}</td>
-          <td>${item.summary?.message || '-'}</td>
-          <td>${formatDate(item.updated_at)}</td>
-          <td><button class=\"mini-btn btn-check\" data-id=\"${item.resource_id}\">Verificar</button></td>
-        </tr>
-      `).join('');
-      container.innerHTML = `
-        <table>
-          <thead>
-            <tr>
-              <th data-sort=\"resource_name\" class=\"sortable\">Recurso / ID</th><th data-sort=\"resource_type\" class=\"sortable\">Tipo / Env</th><th data-sort=\"resource_subtype\" class=\"sortable\">Subtype</th><th data-sort=\"current_status\" class=\"sortable\">Status</th><th>Resumo</th><th data-sort=\"updated_at\" class=\"sortable\">Atualizado</th><th>Ação</th>
-            </tr>
-          </thead>
-          <tbody>${rows}</tbody>
-        </table>`;
-      container.querySelectorAll('th.sortable').forEach((th) => {
-        th.style.cursor = 'pointer';
-        th.addEventListener('click', () => handleSort(th.getAttribute('data-sort')));
-      });
-      container.querySelectorAll('tbody tr').forEach(row => {
-        row.addEventListener('click', () => {
-          selected = row.getAttribute('data-id');
-          loadDetail(selected);
-          selectCatalogResource(selected);
-        });
-      });
-      container.querySelectorAll('.btn-check').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          const id = btn.getAttribute('data-id');
-          triggerCheck(id);
-        });
-      });
-    }
-
-    async function triggerCheck(resourceId) {
-      if (!resourceId) return;
-      try {
-        document.getElementById('error').textContent = '';
-        await fetch(`${API_BASE}/check/${resourceId}`, { method: 'POST' });
-        setCatalogSuccess('Check disparado');
-        await loadStatus();
-        if (selected === resourceId) {
-          await loadDetail(resourceId);
-        }
-      } catch (err) {
-        console.error(err);
-        document.getElementById('error').textContent = 'Erro ao disparar verificação';
-      }
-    }
-
-    async function loadDetail(resourceId) {
-      const detail = document.getElementById('detail');
-      detail.innerHTML = '<div class=\"muted\">Carregando...</div>';
-      try {
-        const [status, history] = await Promise.all([
-          fetchJSON(`${API_BASE}/status/${resourceId}`),
-          fetchJSON(`${API_BASE}/history/${resourceId}?limit=10`)
-        ]);
-        detail.innerHTML = `
-          <div class=\"flex\">
-            <div class=\"title\" style=\"font-size:18px;gap:6px;\">${status.resource_name || resourceId} ${statusPill(status.current_status)}</div>
-            <div class=\"muted\">${status.summary?.message || ''}</div>
-          </div>
-          <div class=\"metrics\">
-            ${status.summary?.key_metrics ? Object.entries(status.summary.key_metrics).map(([k,v]) => `
-              <div class=\"metric\"><label>${k}</label><div class=\"value\">${v}</div></div>
-            `).join('') : '<div class=\"muted\">Sem métricas recentes</div>'}
-          </div>
-          ${renderConnection(status.summary?.connection_info)}
-          ${renderRuntimeDeps(status.summary?.runtime_dependencies || {})}
-          <h3 class=\"small\">Histórico recente</h3>
-          <div class=\"history\">
-            ${renderHistory(history.items || [])}
-          </div>
-        `;
-      } catch (e) {
-        detail.innerHTML = `<div class=\"error\">Erro ao carregar detalhes: ${e.message}</div>`;
-      }
-    }
-
-    function renderRuntimeDeps(runtime) {
-      const prisma = runtime.prisma;
-      if (!prisma) return '';
-      return `
-        <div class=\"runtime-card\">
-          <div class=\"flex\" style=\"justify-content:space-between;\">
-            <div class=\"small\">${i18n('runtimeDependencies')} / ${i18n('prismaOrm')}</div>
-            <div>${statusPill(prisma.status || 'DEGRADED')}</div>
-          </div>
-          <div class=\"metrics\" style=\"margin-top:6px;\">
-            <div class=\"metric\"><label>${i18n('connection')}</label><div class=\"value\">${prisma.connection_ok === false ? 'false' : 'true'}</div></div>
-            <div class=\"metric\"><label>${i18n('poolExhausted')}</label><div class=\"value\">${prisma.pool_exhausted ? 'true' : 'false'}</div></div>
-            <div class=\"metric\"><label>${i18n('latencyP95')}</label><div class=\"value\">${prisma.latency_p95_ms ?? '-'}</div></div>
-            <div class=\"metric\"><label>${i18n('latencyAvg')}</label><div class=\"value\">${prisma.latency_avg_ms ?? '-'}</div></div>
-            <div class=\"metric\"><label>${i18n('errorRate')}</label><div class=\"value\">${prisma.error_rate_pct_5m ?? '-'}</div></div>
-            <div class=\"metric\"><label>${i18n('lastErrorCode')}</label><div class=\"value\">${prisma.last_error_code ?? '-'}</div></div>
-          </div>
-        </div>
-      `;
-    }
-
-    function renderConnection(conn) {
-      if (!conn || (!conn.endpoint && !conn.port)) return '';
-      return `
-        <div class=\"info-card\">
-          <div class=\"flex\" style=\"justify-content:space-between;\">
-            <div class=\"small\">${i18n('connectionInfo')}</div>
-          </div>
-          <div class=\"metrics\" style=\"margin-top:6px;\">
-            ${conn.endpoint ? `<div class=\"metric\"><label>${i18n('endpoint')}</label><div class=\"value\">${conn.endpoint}</div></div>` : ''}
-            ${conn.port ? `<div class=\"metric\"><label>${i18n('port')}</label><div class=\"value\">${conn.port}</div></div>` : ''}
-          </div>
-        </div>
-      `;
-    }
-
-    function renderHistory(items) {
-      if (!items.length) return '<div class=\"muted\">Nenhum check encontrado.</div>';
-      return items.map(item => `
-        <div class=\"metric\" style=\"margin-bottom:8px;\">
-          <div class=\"flex\" style=\"justify-content:space-between;\">
-            <div>${statusPill(item.final_status)} <span class=\"muted\">${item.execution_type}</span></div>
-            <div class=\"muted\">${formatDate(item.executed_at)}</div>
-          </div>
-          <div class=\"metrics\" style=\"margin-top:6px;\">${renderMetrics(item.metrics)}</div>
-        </div>
-      `).join('');
-    }
-
-    function renderMetrics(metrics) {
-      if (!metrics) return '<div class=\"muted\">Sem métricas</div>';
-      return Object.entries(metrics).slice(0, 4).map(([k,v]) => `
-        <div class=\"metric\"><label>${k}</label><div class=\"value\">${v}</div></div>
-      `).join('');
-    }
-
-    function setupControls() {
-      document.getElementById('refresh').addEventListener('click', loadStatus);
-      document.getElementById('apply-filters').addEventListener('click', loadStatus);
-      document.getElementById('filter-type').addEventListener('change', loadStatus);
-      document.getElementById('filter-status').addEventListener('change', loadStatus);
-      document.getElementById('prev-page').addEventListener('click', () => {
-        if (currentPage > 1) {
-          currentPage -= 1;
-          renderTable(applyPaging(applySorting(itemsCache)));
-        }
-      });
-      document.getElementById('next-page').addEventListener('click', () => {
-        currentPage += 1;
-        renderTable(applyPaging(applySorting(itemsCache)));
-      });
-      document.getElementById('page-size').addEventListener('change', (e) => {
-        pageSize = parseInt(e.target.value, 10) || 10;
-        currentPage = 1;
-        renderTable(applyPaging(applySorting(itemsCache)));
-      });
-      document.getElementById('toggle-auto').addEventListener('click', () => {
-        if (autoInterval) {
-          clearInterval(autoInterval);
-          autoInterval = null;
-          document.getElementById('toggle-auto').textContent = 'Ativar';
-          return;
-        }
-        const seconds = parseInt(document.getElementById('interval').value, 10) || 10;
-        autoInterval = setInterval(loadStatus, seconds * 1000);
-        document.getElementById('toggle-auto').textContent = 'Pausar';
-      });
-    }
-
-    // -------- Catalog UI --------
-    async function loadCatalog(preferId) {
-      try {
-        const res = await fetch(`${API_BASE}/catalog`);
-        const payload = await res.json();
-        catalogCache = payload.items || [];
-        const select = document.getElementById('catalog-select');
-        select.innerHTML = '';
-        catalogCache.forEach((c) => {
-          const opt = document.createElement('option');
-          opt.value = c.id;
-          opt.textContent = `${c.name || c.id} (${c.type}${c.env ? '/' + c.env : ''})`;
-          select.appendChild(opt);
-        });
-        if (catalogCache.length) {
-          const chosen = catalogCache.find((c) => c.id === preferId) || catalogCache[0];
-          select.value = chosen.id;
-          populateCatalogForm(chosen);
-        }
-      } catch (err) {
-        console.error(err);
-        setCatalogError('Falha ao carregar catálogo');
-      }
-    }
-
-    function setCatalogError(msg) {
-      document.getElementById('catalog-error').textContent = msg || '';
-    }
-    function setCatalogSuccess(msg) {
-      document.getElementById('catalog-success').textContent = msg || '';
-      if (msg) setTimeout(() => setCatalogSuccess(''), 2000);
-    }
-
-    function renderHints(entry) {
-      const box = document.getElementById('catalog-hints');
-      if (!entry) { box.textContent = 'Selecione um recurso para ver dicas.'; return; }
-      const type = entry.type || '';
-      const subtype = (entry.subtype || '').toLowerCase();
-      const name = (entry.name || '').toLowerCase();
-      let tips = [];
-      if (type === 'database' || subtype === 'postgres') {
-        tips = [
-          'Use endpoint do health do DB (ex: http://host:5432/health ou PG ping).',
-          'Auth não se aplica aqui (collector não abre credenciais ainda).',
-          'Se tiver replica, inclua lag na config JSON (opcional).'
-        ];
-      } else if (type === 'cache_queue' || subtype === 'redis') {
-        tips = [
-          'Endpoint: health/ping do Redis/filas (ex: http://host:port/health).',
-          'Auth: se houver API key, preencha header/valor.',
-          'Body: geralmente vazio; mantenha GET.'
-        ];
-      } else if (type === 'llm_provider' || subtype === 'openai' || subtype === 'gemini') {
-        tips = [
-          'Endpoint: URL de chat/completions ou embeddings de health sintético.',
-          'Método: POST. Body: {"model":"...","messages":[{"role":"user","content":"healthcheck"}],"max_tokens":4}.',
-          'Auth: Bearer token do provedor.'
-        ];
-      } else if (type === 'http_service') {
-        if (name.includes('ace') || name.includes('fsb')) {
-          tips = [
-            'Endpoint: health da API (ex: http://host:port/api/v1/health).',
-            'Método: GET. Auth: se precisar, API Key/Bearer.',
-            'Body vazio; apenas GET 2xx basta.'
-          ];
-        } else if (subtype === 'external_api') {
-          tips = [
-            'Endpoint: URL pública de health/hello.',
-            'Se exigir token, use Auth -> API Key ou Bearer.',
-            'Body geralmente vazio; mantenha GET.'
-          ];
-        } else {
-          tips = [
-            'Endpoint: health/ping do serviço.',
-            'Auth: preencha se o serviço exigir header.',
-            'Body vazio salvo se o health for POST.'
-          ];
-        }
-      } else if (type === 'vector_db') {
-        tips = [
-          'Endpoint: health/ping do vetor (ex: http://host:port/health).',
-          'Auth se houver. Método: GET.'
-        ];
-      } else {
-        tips = ['Sem dicas específicas; configure endpoint/método/auth conforme seu serviço.'];
-      }
-      box.innerHTML = '<ul>' + tips.map(t => `<li>${t}</li>`).join('') + '</ul>';
-    }
-
-    function populateCatalogForm(entry) {
-      currentCatalogEntry = entry;
-      document.getElementById('catalog-select').value = entry.id;
-      document.getElementById('cat-endpoint').value = entry?.connection?.endpoint || entry?.config?.baseUrl || '';
-      document.getElementById('cat-method').value = (entry?.connection?.method || 'GET').toUpperCase();
-      const auth = entry?.connection?.auth || {};
-      document.getElementById('cat-auth-mode').value = auth.mode || auth.type || '';
-      document.getElementById('cat-auth-header').value = auth.header || '';
-      document.getElementById('cat-auth-token').value = auth.token || auth.value || '';
-      document.getElementById('cat-body').value = entry?.connection?.body ? JSON.stringify(entry.connection.body, null, 2) : '';
-      document.getElementById('cat-config').value = entry?.config ? JSON.stringify(entry.config, null, 2) : '';
-      document.getElementById('cat-id').value = entry.id || '';
-      document.getElementById('cat-name').value = entry.name || '';
-      const typeSelect = document.getElementById('cat-type');
-      const typeCustom = document.getElementById('cat-type-custom');
-      if (['database','cache_queue','http_service','llm_provider','vector_db'].includes(entry.type || '')) {
-        typeSelect.value = entry.type || 'http_service';
-        typeCustom.style.display = 'none';
-        typeCustom.value = '';
-      } else {
-        typeSelect.value = 'custom';
-        typeCustom.style.display = 'block';
-        typeCustom.value = entry.type || '';
-      }
-      document.getElementById('cat-subtype').value = entry.subtype || '';
-      document.getElementById('cat-env').value = entry.env || '';
-      renderHints(entry);
-      const exists = !!catalogCache.find((c) => c.id === entry.id);
-      setEditLocks(exists);
-    }
-
-    function selectCatalogResource(resourceId) {
-      if (!resourceId) return;
-      if (!catalogCache.length) {
-        loadCatalog().then(() => selectCatalogResource(resourceId));
-        return;
-      }
-      const entry = catalogCache.find((c) => c.id === resourceId);
-      if (entry) {
-        populateCatalogForm(entry);
-        setCatalogError('');
-      } else {
-        setCatalogError('Recurso não está no catálogo (importe ou crie).');
-      }
-    }
-
-    function bindCatalog() {
-      document.getElementById('catalog-refresh').addEventListener('click', loadCatalog);
-      document.getElementById('catalog-new').addEventListener('click', () => {
-        setCatalogError(''); setCatalogSuccess('');
-        const newId = genId();
-        const blank = {
-          id: newId,
-          name: 'Novo recurso',
-          type: 'http_service',
-          subtype: '',
-          env: 'DEV',
-          connection: { endpoint: '' }
-        };
-        currentCatalogEntry = blank;
-        populateCatalogForm(blank);
-        // adiciona opção temporária no select
-        const select = document.getElementById('catalog-select');
-        const opt = document.createElement('option');
-        opt.value = newId;
-        opt.textContent = `${blank.name} (${blank.type})`;
-        select.appendChild(opt);
-        select.value = newId;
-        setEditLocks(false);
-      });
-      document.getElementById('catalog-import').addEventListener('click', async () => {
-        setCatalogError(''); setCatalogSuccess('');
-        try {
-          await fetch(`${API_BASE}/catalog/import`, { method: 'POST' });
-          setCatalogSuccess('Snapshot importado do Registry');
-          await loadCatalog();
-        } catch (err) {
-          console.error(err);
-          setCatalogError('Falha ao importar do Registry');
-        }
-      });
-      document.getElementById('catalog-select').addEventListener('change', (e) => {
-        const entry = catalogCache.find((c) => c.id === e.target.value);
-        if (entry) populateCatalogForm(entry);
-      });
-      document.getElementById('cat-type').addEventListener('change', (e) => {
-        const customInput = document.getElementById('cat-type-custom');
-        if (e.target.value === 'custom') {
-          customInput.style.display = 'block';
-        } else {
-          customInput.style.display = 'none';
-          customInput.value = '';
-        }
-      });
-      document.getElementById('catalog-save').addEventListener('click', async () => {
-        setCatalogError(''); setCatalogSuccess('');
-        const id = document.getElementById('catalog-select').value;
-        const formId = document.getElementById('cat-id').value.trim() || id;
-      if (!formId) { setCatalogError('Informe um ID'); return; }
-      const formName = document.getElementById('cat-name').value.trim() || 'Sem nome';
-      const formType = document.getElementById('cat-type').value || 'http_service';
-      const formSubtype = document.getElementById('cat-subtype').value.trim() || undefined;
-      const formEnv = document.getElementById('cat-env').value.trim() || undefined;
-      let bodyJson, configJson;
-      try {
-        const rawBody = document.getElementById('cat-body').value.trim();
-        if (rawBody) bodyJson = JSON.parse(rawBody);
-      } catch { setCatalogError('Body JSON inválido'); return; }
-        try {
-          const rawCfg = document.getElementById('cat-config').value.trim();
-          if (rawCfg) configJson = JSON.parse(rawCfg);
-        } catch { setCatalogError('Config JSON inválido'); return; }
-      const payload = {
-        id: formId,
-        name: formName,
-        type: formType === 'custom' ? (document.getElementById('cat-type-custom').value.trim() || 'http_service') : formType,
-        subtype: formSubtype,
-        env: formEnv,
-        connection: {
-          endpoint: document.getElementById('cat-endpoint').value.trim() || undefined,
-          method: document.getElementById('cat-method').value,
-          auth: (() => {
-            const mode = document.getElementById('cat-auth-mode').value;
-              const header = document.getElementById('cat-auth-header').value.trim();
-              const token = document.getElementById('cat-auth-token').value.trim();
-              if (!mode) return undefined;
-              if (mode === 'API_KEY') return header && token ? { mode, header, value: token } : undefined;
-              return token ? { mode, token } : undefined;
-            })(),
-            body: bodyJson
-          },
-          config: configJson
-        };
-        try {
-        const res = await fetch(`${API_BASE}/catalog/${formId}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-          if (!res.ok) throw new Error('Erro ao salvar');
-          setCatalogSuccess('Salvo');
-          await loadCatalog();
-        } catch (err) {
-          console.error(err);
-          setCatalogError('Falha ao salvar');
-        }
-      });
-      document.getElementById('catalog-delete').addEventListener('click', async () => {
-        setCatalogError(''); setCatalogSuccess('');
-        const id = document.getElementById('catalog-select').value;
-        if (!id) { setCatalogError('Selecione um recurso'); return; }
-        if (!confirm('Remover este recurso do catálogo e parar monitoramento?')) return;
-        try {
-          const res = await fetch(`${API_BASE}/catalog/${id}`, { method: 'DELETE' });
-          if (!res.ok && res.status !== 404) throw new Error('Erro ao remover');
-          setCatalogSuccess('Removido');
-          await loadCatalog(formId);
-          document.getElementById('cat-endpoint').value = '';
-          document.getElementById('cat-body').value = '';
-          document.getElementById('cat-config').value = '';
-          document.getElementById('cat-auth-mode').value = '';
-          document.getElementById('cat-auth-header').value = '';
-          document.getElementById('cat-auth-token').value = '';
-          currentCatalogEntry = null;
-          renderHints(null);
-        } catch (err) {
-          console.error(err);
-          setCatalogError('Falha ao remover');
-        }
-      });
+      currentData = data.items || [];
+      renderTable(currentData);
+      updatePagination(data.paging);
       loadCatalog();
     }
 
-    (async function init() {
-      setupControls();
-      await loadStatus();
-      bindCatalog();
-    })();
+    function renderTable(items) {
+      const tbody = document.getElementById('statusBody');
+
+      if (items.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="6" class="empty-state">
+              <div class="empty-state-icon">🔍</div>
+              <p>Nenhum recurso encontrado</p>
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = items.map(item => `
+        <tr onclick="showDetail('${item.resource_id}')">
+          <td><strong>${item.resource_name}</strong><br/><small style="color: var(--text-muted)">${item.resource_id}</small></td>
+          <td>${item.resource_type}<br/><small style="color: var(--text-muted)">${item.resource_subtype || '-'}</small></td>
+          <td>${item.env || '-'}</td>
+          <td><span class="status-badge status-${item.current_status}">${item.current_status}</span></td>
+          <td>${new Date(item.last_check_at).toLocaleString('pt-BR')}</td>
+          <td><button onclick="event.stopPropagation(); triggerCheck('${item.resource_id}')" class="secondary" style="padding: 0.5rem 0.75rem; font-size: 0.75rem;">Verificar</button></td>
+        </tr>
+      `).join('');
+    }
+
+    async function triggerCheck(resourceId) {
+      await fetch(`${API_BASE}/check/${resourceId}`, { method: 'POST' });
+      setTimeout(refreshStatus, 2000);
+    }
+
+    async function showDetail(resourceId) {
+      const res = await fetch(`${API_BASE}/status/${resourceId}`);
+      const data = await res.json();
+
+      const detailContent = document.getElementById('detailContent');
+      detailContent.innerHTML = `
+        <div class="detail-section">
+          <h3>Informações Básicas</h3>
+          <div class="detail-info">
+            <div class="detail-row">
+              <span class="detail-label">Nome</span>
+              <span class="detail-value">${data.resource_name}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Status Atual</span>
+              <span class="status-badge status-${data.current_status}">${data.current_status}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Falhas Consecutivas</span>
+              <span class="detail-value">${data.consecutive_failures}</span>
+            </div>
+          </div>
+        </div>
+        <div class="detail-section">
+          <h3>Última Verificação</h3>
+          <div class="detail-info">
+            <div class="detail-row">
+              <span class="detail-label">Data/Hora</span>
+              <span class="detail-value">${new Date(data.last_check_at).toLocaleString('pt-BR')}</span>
+            </div>
+            ${data.last_success_at ? `
+            <div class="detail-row">
+              <span class="detail-label">Último Sucesso</span>
+              <span class="detail-value">${new Date(data.last_success_at).toLocaleString('pt-BR')}</span>
+            </div>
+            ` : ''}
+          </div>
+        </div>
+      `;
+
+      document.getElementById('detailPanel').style.display = 'block';
+      document.getElementById('catalogPanel').style.display = 'none';
+    }
+
+    function closeDetail() {
+      document.getElementById('detailPanel').style.display = 'none';
+      document.getElementById('catalogPanel').style.display = 'block';
+    }
+
+    async function loadCatalog() {
+      const res = await fetch(`${API_BASE}/catalog`);
+      const data = await res.json();
+      const select = document.getElementById('resourceSelect');
+      select.innerHTML = '<option value="">Selecione...</option>' +
+        (data.items || []).map(r => `<option value="${r.id}">${r.name}</option>`).join('');
+
+      document.getElementById('resourceCount').textContent = `${data.items?.length || 0} Recursos`;
+    }
+
+    function updatePagination(paging) {
+      document.getElementById('paginationInfo').textContent =
+        `Mostrando ${paging.offset + 1}-${Math.min(paging.offset + paging.limit, paging.total)} de ${paging.total} recursos`;
+    }
+
+    function nextPage() {
+      currentPage++;
+      refreshStatus();
+    }
+
+    function previousPage() {
+      if (currentPage > 0) {
+        currentPage--;
+        refreshStatus();
+      }
+    }
+
+    function sortTable(col) {
+      // Implement sorting logic
+      console.log('Sort by column', col);
+    }
+
+    function createNewResource() {
+      document.getElementById('catalogForm').style.display = 'block';
+      document.getElementById('formId').value = '';
+      document.getElementById('formName').value = '';
+    }
+
+    function cancelEdit() {
+      document.getElementById('catalogForm').style.display = 'none';
+    }
+
+    async function saveResource() {
+      const resource = {
+        id: document.getElementById('formId').value,
+        name: document.getElementById('formName').value,
+        type: document.getElementById('formType').value,
+        env: document.getElementById('formEnv').value,
+        enabled: true,
+        connection: {
+          endpoint: document.getElementById('formEndpoint').value
+        }
+      };
+
+      await fetch(`${API_BASE}/catalog`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(resource)
+      });
+
+      cancelEdit();
+      loadCatalog();
+    }
+
+    async function deleteResource() {
+      const id = document.getElementById('formId').value;
+      if (confirm('Tem certeza que deseja excluir este recurso?')) {
+        await fetch(`${API_BASE}/catalog/${id}`, { method: 'DELETE' });
+        cancelEdit();
+        loadCatalog();
+      }
+    }
+
+    async function importFromRegistry() {
+      await fetch(`${API_BASE}/catalog/import`, { method: 'POST' });
+      loadCatalog();
+      refreshStatus();
+    }
+
+    // Initialize
+    refreshStatus();
+    setInterval(refreshStatus, 30000); // Auto-refresh every 30s
   </script>
 </body>
 </html>
