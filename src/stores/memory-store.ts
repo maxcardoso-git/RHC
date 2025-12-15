@@ -4,8 +4,9 @@ import {
   ResourceHealthCheck,
   ResourceHealthStatus
 } from '../domain/types.js';
+import { IHealthStore } from './store-interface.js';
 
-export class MemoryStore {
+export class MemoryStore implements IHealthStore {
   private resources = new Map<string, ResourceDescriptor>();
   private status = new Map<string, ResourceHealthStatus>();
   private checks: ResourceHealthCheck[] = [];

@@ -8,7 +8,10 @@
     "build": "tsc -p tsconfig.json",
     "postbuild": "cp -r src/public dist/public",
     "start": "node dist/index.js",
-    "lint": "echo 'lint placeholder'"
+    "lint": "echo 'lint placeholder'",
+    "migrate:up": "node scripts/migrate.js up",
+    "migrate:down": "node scripts/migrate.js down",
+    "seed": "node scripts/seed.js"
   },
   "engines": {
     "node": ">=18.0.0"
@@ -18,12 +21,14 @@
     "@fastify/static": "^6.12.0",
     "fastify": "^4.26.2",
     "fastify-plugin": "^4.5.1",
+    "pg": "^8.16.3",
     "pino": "^8.17.2",
     "uuid": "^9.0.1",
     "zod": "^3.22.4"
   },
   "devDependencies": {
     "@types/node": "^20.11.0",
+    "@types/pg": "^8.16.0",
     "@types/uuid": "^9.0.7",
     "pino-pretty": "^11.0.0",
     "ts-node": "^10.9.2",

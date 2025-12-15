@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: rhc-postgres
+    environment:
+      POSTGRES_USER: rhc_user
+      POSTGRES_PASSWORD: rhc_password
+      POSTGRES_DB: rhc_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U rhc_user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - rhc-network
+
+  rhc:
+    build: .
+    container_name: rhc-app
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: postgresql://rhc_user:rhc_password@postgres:5432/rhc_db
+      DATABASE_CACHE_ENABLED: "true"
+      INTERNAL_API_KEY: dev-key
+      DEFAULT_LOCALE: pt-BR
+      LOG_LEVEL: info
+      SCHEDULER_LOOP_SECONDS: "30"
+      SCHEDULER_JITTER_MAX_SECONDS: "10"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - rhc-network
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  rhc-network:
+    driver: bridge

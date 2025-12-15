@@ -7,6 +7,11 @@ export interface AppConfig {
   port: number;
   apiKey?: string;
   defaultLocale: Locale;
+  database: {
+    url?: string;
+    usePostgres: boolean;
+    enableCache: boolean;
+  };
   catalog: {
     filePath: string;
   };
@@ -25,12 +30,20 @@ export interface AppConfig {
 }
 
 export function loadConfig(): AppConfig {
+  const databaseUrl = process.env.DATABASE_URL;
+  const usePostgres = !!databaseUrl; // Auto-enable if DATABASE_URL is set
+
   return {
     serviceName: process.env.SERVICE_NAME || 'resource-health-checker',
     env: process.env.NODE_ENV || 'development',
     port: parseInt(process.env.PORT || '3000', 10),
     apiKey: process.env.INTERNAL_API_KEY,
     defaultLocale: (process.env.DEFAULT_LOCALE as Locale) || DEFAULT_LOCALE,
+    database: {
+      url: databaseUrl,
+      usePostgres: usePostgres,
+      enableCache: process.env.DATABASE_CACHE_ENABLED !== 'false' // Default true
+    },
     catalog: {
       filePath: process.env.CATALOG_FILE || '/app/data/resource-catalog.json'
     },

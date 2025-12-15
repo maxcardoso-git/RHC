@@ -1,5 +1,5 @@
 import { AppConfig } from '../config/index.js';
-import { memoryStore } from '../stores/memory-store.js';
+import { getStore } from '../stores/store-factory.js';
 import { HealthService } from '../services/health-service.js';
 import { logger } from '../utils/logger.js';
 import { CatalogService } from '../services/catalog-service.js';
@@ -37,13 +37,14 @@ export class Scheduler {
   }
 
   private async loop() {
+    const store = getStore();
     const resources = this.catalogService.list().filter((r) => r.enabled && r.policy?.enabled);
-    memoryStore.setResources(resources);
+    await store.setResources(resources);
     for (const res of resources) {
       const policy = res.policy!;
       if (policy.schedule.type !== 'INTERVAL') continue;
       const intervalSeconds = parseIntervalSeconds(policy.schedule.value);
-      const status = memoryStore.getStatus(res.id);
+      const status = await store.getStatus(res.id);
       const lastCheck = status?.last_check_at ? new Date(status.last_check_at).getTime() : 0;
       const now = Date.now();
       if (now - lastCheck < intervalSeconds * 1000 + jitter(this.cfg.scheduler.jitterMaxSeconds) * 1000) {

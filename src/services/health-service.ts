@@ -1,7 +1,7 @@
 import { v4 as uuid } from 'uuid';
 import { runCollector } from '../collectors/index.js';
 import { evaluateRules } from '../rules/rule-engine.js';
-import { memoryStore } from '../stores/memory-store.js';
+import { getStore } from '../stores/store-factory.js';
 import { i18nMessages } from '../i18n/index.js';
 import {
   ExecutionType,
@@ -23,11 +23,12 @@ export class HealthService {
     executionType: ExecutionType,
     resourceOverride?: ResourceDescriptor
   ): Promise<ResourceHealthCheck> {
+    const store = getStore();
     const resource = resourceOverride || this.catalog.get(resourceId);
     if (!resource) {
       throw new Error('RESOURCE_NOT_FOUND');
     }
-    memoryStore.upsertResource(resource);
+    await store.upsertResource(resource);
     const policy = resource.policy;
     if (!policy || !policy.enabled) {
       throw new Error('POLICY_DISABLED');
@@ -58,8 +59,8 @@ export class HealthService {
         collector_debug: collectorResult.debug
       };
 
-      memoryStore.addCheck(check);
-      this.persistStatusFromCheck(resourceId, policy, resource, check, ruleFailed);
+      await store.addCheck(check);
+      await this.persistStatusFromCheck(resourceId, policy, resource, check, ruleFailed);
       return check;
     } catch (err) {
       errorMessage = err instanceof Error ? err.message : 'Unknown collector error';
@@ -74,21 +75,22 @@ export class HealthService {
         rule_evaluations: {},
         error_message: errorMessage
       };
-      memoryStore.addCheck(check);
-      this.persistStatusFromCheck(resourceId, policy, resource, check, ruleFailed);
+      await store.addCheck(check);
+      await this.persistStatusFromCheck(resourceId, policy, resource, check, ruleFailed);
       logger.error({ err, resourceId }, 'collector failed');
       return check;
     }
   }
 
-  private persistStatusFromCheck(
+  private async persistStatusFromCheck(
     resourceId: string,
     policy: HealthPolicy,
     resource: ResourceDescriptor,
     check: ResourceHealthCheck,
     failedRules: string[]
   ) {
-    const existing = memoryStore.getStatus(resourceId);
+    const store = getStore();
+    const existing = await store.getStatus(resourceId);
     const nextFailures = check.final_status === 'UP' ? 0 : (existing?.consecutive_failures || 0) + 1;
     const summaryMessage = this.getSummaryMessage(check.final_status);
     const summary = {
@@ -116,11 +118,11 @@ export class HealthService {
     };
 
     if (check.final_status === 'UP') {
-      memoryStore.resetFailures(resourceId);
+      await store.resetFailures(resourceId);
     } else {
-      memoryStore.incrementFailures(resourceId);
+      await store.incrementFailures(resourceId);
     }
-    memoryStore.upsertStatus(status);
+    await store.upsertStatus(status);
   }
 
   private getSummaryMessage(status: HealthStatus) {
@@ -136,20 +138,31 @@ export class HealthService {
     }
   }
 
-  listStatus(filters?: Parameters<typeof memoryStore.listStatus>[0]) {
-    return memoryStore.listStatus(filters);
+  listStatus(filters?: {
+    type?: string;
+    subtype?: string;
+    status?: HealthStatus;
+    tag?: string;
+    owner?: string;
+    env?: string;
+  }) {
+    const store = getStore();
+    return store.listStatus(filters);
   }
 
   getStatus(resourceId: string) {
-    return memoryStore.getStatus(resourceId);
+    const store = getStore();
+    return store.getStatus(resourceId);
   }
 
   listChecks(resourceId: string, limit: number, offset: number) {
-    return memoryStore.listChecks(resourceId, limit, offset);
+    const store = getStore();
+    return store.listChecks(resourceId, limit, offset);
   }
 
   getCheck(checkId: string) {
-    return memoryStore.getCheck(checkId);
+    const store = getStore();
+    return store.getCheck(checkId);
   }
 
   private buildRuntimeDependencies(metrics: Record<string, import('../domain/types.js').MetricValue>) {
