@@ -882,14 +882,73 @@
           <td>${item.env || '-'}</td>
           <td><span class="status-badge status-${item.current_status}">${item.current_status}</span></td>
           <td>${new Date(item.last_check_at).toLocaleString('pt-BR')}</td>
-          <td><button onclick="event.stopPropagation(); triggerCheck('${item.resource_id}')" class="secondary" style="padding: 0.5rem 0.75rem; font-size: 0.75rem;">Verificar</button></td>
+          <td>
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+              <button onclick="event.stopPropagation(); triggerCheck('${item.resource_id}')" class="secondary" style="padding: 0.5rem 0.75rem; font-size: 0.75rem;">🔄 Verificar</button>
+              <button onclick="event.stopPropagation(); editResourceFromTable('${item.resource_id}')" class="secondary" style="padding: 0.5rem 0.75rem; font-size: 0.75rem;">✏️ Editar</button>
+              <button onclick="event.stopPropagation(); deleteResourceFromTable('${item.resource_id}', '${item.resource_name}')" class="danger" style="padding: 0.5rem 0.75rem; font-size: 0.75rem;">🗑️ Excluir</button>
+            </div>
+          </td>
         </tr>
       `).join('');
     }
 
     async function triggerCheck(resourceId) {
       await fetch(`${API_BASE}/check/${resourceId}`, { method: 'POST' });
+      showToast('success', 'Verificação iniciada', 'O recurso será verificado em breve');
       setTimeout(refreshStatus, 2000);
+    }
+
+    async function editResourceFromTable(resourceId) {
+      try {
+        const response = await fetch(`${API_BASE}/catalog/${resourceId}`);
+        if (!response.ok) {
+          throw new Error('Recurso não encontrado');
+        }
+
+        const resource = await response.json();
+
+        // Preencher o formulário com os dados do recurso
+        document.getElementById('formId').value = resource.id;
+        document.getElementById('formId').readOnly = true; // ID não pode ser alterado
+        document.getElementById('formName').value = resource.name;
+        document.getElementById('formType').value = resource.type;
+        document.getElementById('formEnv').value = resource.env || '';
+        document.getElementById('formEndpoint').value = resource.connection?.endpoint || '';
+
+        // Mostrar o formulário
+        document.getElementById('catalogForm').style.display = 'block';
+
+        // Scroll para o formulário
+        document.getElementById('catalogForm').scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+        showToast('success', 'Recurso carregado', 'Edite os campos e clique em Salvar');
+      } catch (error) {
+        console.error('Erro ao carregar recurso:', error);
+        showToast('error', 'Erro ao carregar', error.message);
+      }
+    }
+
+    async function deleteResourceFromTable(resourceId, resourceName) {
+      if (!confirm(`Tem certeza que deseja excluir "${resourceName}"?\n\nEsta ação não pode ser desfeita.`)) {
+        return;
+      }
+
+      try {
+        const response = await fetch(`${API_BASE}/catalog/${resourceId}`, { method: 'DELETE' });
+
+        if (!response.ok) {
+          throw new Error('Erro ao excluir recurso');
+        }
+
+        showToast('success', 'Recurso excluído', `${resourceName} foi removido do catálogo`);
+
+        await loadCatalog();
+        await refreshStatus();
+      } catch (error) {
+        console.error('Erro ao excluir:', error);
+        showToast('error', 'Erro ao excluir', error.message);
+      }
     }
 
     async function showDetail(resourceId) {
@@ -974,13 +1033,24 @@
     }
 
     function createNewResource() {
-      document.getElementById('catalogForm').style.display = 'block';
+      // Limpar o formulário
       document.getElementById('formId').value = '';
+      document.getElementById('formId').readOnly = false;
       document.getElementById('formName').value = '';
+      document.getElementById('formType').value = '';
+      document.getElementById('formEnv').value = '';
+      document.getElementById('formEndpoint').value = '';
+
+      // Mostrar o formulário
+      document.getElementById('catalogForm').style.display = 'block';
+
+      // Scroll para o formulário
+      document.getElementById('catalogForm').scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 
     function cancelEdit() {
       document.getElementById('catalogForm').style.display = 'none';
+      document.getElementById('formId').readOnly = false;
     }
 
     async function saveResource() {
