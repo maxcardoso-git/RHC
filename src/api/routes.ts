@@ -58,7 +58,7 @@ export async function registerRoutes(
   app.get(`${base}/status/:resource_id`, async (request, reply) => {
     const resourceId = (request.params as { resource_id: string }).resource_id;
     const locale = pickUserLocale(request.headers['accept-language']);
-    const status = deps.healthService.getStatus(resourceId);
+    const status = await deps.healthService.getStatus(resourceId);
     if (!status) {
       reply.code(404).send({ code: 'RESOURCE_NOT_FOUND' });
       return;
@@ -69,7 +69,7 @@ export async function registerRoutes(
   app.get(`${base}/status`, async (request, reply) => {
     const query = request.query as Record<string, string | undefined>;
     const locale = pickUserLocale(request.headers['accept-language']);
-    const items = deps.healthService.listStatus({
+    const items = await deps.healthService.listStatus({
       type: query.type,
       subtype: query.subtype,
       status: query.status as any,
@@ -91,13 +91,13 @@ export async function registerRoutes(
     const query = request.query as Record<string, string | undefined>;
     const limit = query.limit ? parseInt(query.limit, 10) : 20;
     const offset = query.offset ? parseInt(query.offset, 10) : 0;
-    const { items, total } = deps.healthService.listChecks(resourceId, limit, offset);
+    const { items, total } = await deps.healthService.listChecks(resourceId, limit, offset);
     reply.send({ items, paging: { limit, offset, total } });
   });
 
   app.get(`${base}/checks/:check_id`, async (request, reply) => {
     const checkId = (request.params as { check_id: string }).check_id;
-    const check = deps.healthService.getCheck(checkId);
+    const check = await deps.healthService.getCheck(checkId);
     if (!check) {
       reply.code(404).send({ code: 'CHECK_NOT_FOUND' });
       return;
