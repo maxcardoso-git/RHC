@@ -89,6 +89,7 @@ export interface ResourceDescriptor {
   enabled: boolean;
   owner?: string;
   env?: string;
+  app?: string;
   criticality?: 'tier1' | 'tier2' | 'tier3';
   tags?: string[];
   connection?: Record<string, unknown>;
@@ -102,6 +103,7 @@ export interface ResourceHealthStatus {
   resource_type: ResourceType;
   resource_subtype?: ResourceSubtype;
   env?: string;
+  app?: string;
   current_status: HealthStatus;
   last_check_at?: string;
   last_success_at?: string;

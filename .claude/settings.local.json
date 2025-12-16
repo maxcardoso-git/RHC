@@ -23,7 +23,10 @@
       "Bash(ssh root@72.61.52.70 \"docker logs rhc 2>&1 | tail -30\")",
       "Bash(ssh root@72.61.52.70:*)",
       "Bash(ssh root@72.61.52.70 \"docker logs rhc 2>&1 | grep -E ''error|Error|ERROR|failed|Failed'' | tail -20\")",
-      "Bash(wait:*)"
+      "Bash(wait:*)",
+      "Bash(ssh root@72.61.52.70 \"docker ps --format ''{{.Names}}\\t{{.Ports}}'' | grep -v rhc\")",
+      "Bash(chmod:*)",
+      "Bash(/tmp/register-all-services.sh)"
     ]
   }
 }
