@@ -34,7 +34,8 @@
       "Bash(ssh root@72.61.52.70 \"docker logs rhc 2>&1 | tail -15\")",
       "Bash(/tmp/register-all-services.sh:*)",
       "Bash(npx tsc:*)",
-      "Bash(echo \"Build status: $?\")"
+      "Bash(echo \"Build status: $?\")",
+      "Bash(/tmp/register-services-correct.sh)"
     ]
   }
 }
