@@ -27,6 +27,7 @@ export interface IHealthStore {
     tag?: string;
     owner?: string;
     env?: string;
+    app?: string;
   }): ResourceHealthStatus[] | Promise<ResourceHealthStatus[]>;
   incrementFailures(resourceId: string): void | Promise<void>;
   resetFailures(resourceId: string): void | Promise<void>;

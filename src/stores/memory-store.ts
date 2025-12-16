@@ -48,6 +48,7 @@ export class MemoryStore implements IHealthStore {
     tag?: string;
     owner?: string;
     env?: string;
+    app?: string;
   }): ResourceHealthStatus[] {
     let items = Array.from(this.status.values());
     if (filters?.type) {
@@ -67,6 +68,9 @@ export class MemoryStore implements IHealthStore {
     }
     if (filters?.env) {
       items = items.filter((s) => this.resources.get(s.resource_id)?.env === filters.env);
+    }
+    if (filters?.app) {
+      items = items.filter((s) => s.app === filters.app);
     }
     return items;
   }

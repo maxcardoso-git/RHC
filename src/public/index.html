@@ -146,6 +146,127 @@
       pointer-events: none;
     }
 
+    /* Confirm Modal */
+    .confirm-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+      animation: fadeIn 0.2s ease;
+    }
+
+    .confirm-overlay.show {
+      display: flex;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .confirm-modal {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 2rem;
+      max-width: 500px;
+      width: 90%;
+      box-shadow: var(--shadow-lg);
+      animation: slideUp 0.3s ease;
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .confirm-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .confirm-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(245, 158, 11, 0.2));
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      flex-shrink: 0;
+    }
+
+    .confirm-text h3 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      color: var(--text-primary);
+    }
+
+    .confirm-text p {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    .confirm-actions {
+      display: flex;
+      gap: 0.75rem;
+      justify-content: flex-end;
+      margin-top: 2rem;
+    }
+
+    .confirm-btn {
+      padding: 0.75rem 1.5rem;
+      border-radius: 10px;
+      border: none;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-family: inherit;
+    }
+
+    .confirm-btn-cancel {
+      background: var(--bg-secondary);
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
+    }
+
+    .confirm-btn-cancel:hover {
+      background: var(--bg-hover);
+      border-color: var(--border-hover);
+      color: var(--text-primary);
+    }
+
+    .confirm-btn-confirm {
+      background: linear-gradient(135deg, var(--danger), #dc2626);
+      color: white;
+      box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+    }
+
+    .confirm-btn-confirm:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 16px rgba(239, 68, 68, 0.4);
+    }
+
     .toast {
       background: var(--bg-card);
       border: 1px solid var(--border);
@@ -661,6 +782,23 @@
   <!-- Toast Container -->
   <div class="toast-container" id="toastContainer"></div>
 
+  <!-- Confirm Modal -->
+  <div class="confirm-overlay" id="confirmOverlay">
+    <div class="confirm-modal">
+      <div class="confirm-header">
+        <div class="confirm-icon">⚠️</div>
+        <div class="confirm-text">
+          <h3 id="confirmTitle">Confirmar ação</h3>
+          <p id="confirmMessage">Tem certeza que deseja continuar?</p>
+        </div>
+      </div>
+      <div class="confirm-actions">
+        <button class="confirm-btn confirm-btn-cancel" id="confirmCancel">Cancelar</button>
+        <button class="confirm-btn confirm-btn-confirm" id="confirmOk">OK</button>
+      </div>
+    </div>
+  </div>
+
   <header>
     <div class="header-left">
       <div class="logo-container">
@@ -701,6 +839,16 @@
           <option value="production">Production</option>
           <option value="staging">Staging</option>
           <option value="development">Development</option>
+        </select>
+        <select id="filterApp" onchange="refreshStatus()">
+          <option value="">Aplicação: Todas</option>
+          <option value="RHC">RHC</option>
+          <option value="RAG Layer">RAG Layer</option>
+          <option value="IPM">IPM</option>
+          <option value="VectorLayer">VectorLayer</option>
+          <option value="DCP">DCP</option>
+          <option value="MDM">MDM</option>
+          <option value="FTM">FTM</option>
         </select>
         <select id="pageSize" onchange="refreshStatus()">
           <option value="10">10 por página</option>
@@ -842,16 +990,60 @@
       }, 4000);
     }
 
+    // Confirm dialog system
+    function showConfirm(title, message) {
+      return new Promise((resolve) => {
+        const overlay = document.getElementById('confirmOverlay');
+        const titleEl = document.getElementById('confirmTitle');
+        const messageEl = document.getElementById('confirmMessage');
+        const cancelBtn = document.getElementById('confirmCancel');
+        const okBtn = document.getElementById('confirmOk');
+
+        titleEl.textContent = title;
+        messageEl.textContent = message;
+        overlay.classList.add('show');
+
+        function cleanup() {
+          overlay.classList.remove('show');
+          cancelBtn.removeEventListener('click', handleCancel);
+          okBtn.removeEventListener('click', handleOk);
+          overlay.removeEventListener('click', handleOverlayClick);
+        }
+
+        function handleCancel() {
+          cleanup();
+          resolve(false);
+        }
+
+        function handleOk() {
+          cleanup();
+          resolve(true);
+        }
+
+        function handleOverlayClick(e) {
+          if (e.target === overlay) {
+            handleCancel();
+          }
+        }
+
+        cancelBtn.addEventListener('click', handleCancel);
+        okBtn.addEventListener('click', handleOk);
+        overlay.addEventListener('click', handleOverlayClick);
+      });
+    }
+
     async function refreshStatus() {
       const status = document.getElementById('filterStatus').value;
       const type = document.getElementById('filterType').value;
       const env = document.getElementById('filterEnv').value;
+      const app = document.getElementById('filterApp').value;
       const pageSize = parseInt(document.getElementById('pageSize').value);
 
       const params = new URLSearchParams();
       if (status) params.append('status', status);
       if (type) params.append('type', type);
       if (env) params.append('env', env);
+      if (app) params.append('app', app);
       params.append('limit', pageSize);
       params.append('offset', currentPage * pageSize);
 
@@ -935,7 +1127,12 @@
     }
 
     async function deleteResourceFromTable(resourceId, resourceName) {
-      if (!confirm(`Tem certeza que deseja excluir "${resourceName}"?\n\nEsta ação não pode ser desfeita.`)) {
+      const confirmed = await showConfirm(
+        `Excluir "${resourceName}"?`,
+        'Esta ação não pode ser desfeita. O recurso será removido permanentemente do catálogo.'
+      );
+
+      if (!confirmed) {
         return;
       }
 
@@ -1146,7 +1343,12 @@
       const id = document.getElementById('formId').value;
       const name = document.getElementById('formName').value;
 
-      if (confirm(`Tem certeza que deseja excluir "${name}"?`)) {
+      const confirmed = await showConfirm(
+        `Excluir "${name}"?`,
+        'Esta ação não pode ser desfeita. O recurso será removido permanentemente do catálogo.'
+      );
+
+      if (confirmed) {
         try {
           const response = await fetch(`${API_BASE}/catalog/${id}`, { method: 'DELETE' });
 

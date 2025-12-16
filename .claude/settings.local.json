@@ -29,7 +29,8 @@
       "Bash(/tmp/register-all-services.sh)",
       "Bash(while read id)",
       "Bash(do curl -s -X DELETE \"http://72.61.52.70:32000/api/v1/resource-health/catalog/$id\" echo \"Deleted: $id\" done)",
-      "Bash(/tmp/delete-all-resources.sh)"
+      "Bash(/tmp/delete-all-resources.sh)",
+      "Bash(timeout 30 npx tsc:*)"
     ]
   }
 }

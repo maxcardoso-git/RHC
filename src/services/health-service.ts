@@ -146,6 +146,7 @@ export class HealthService {
     tag?: string;
     owner?: string;
     env?: string;
+    app?: string;
   }) {
     const store = getStore();
     return store.listStatus(filters);
