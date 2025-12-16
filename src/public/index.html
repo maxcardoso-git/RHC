@@ -1075,7 +1075,7 @@
               {
                 rule_id: 'availability_check',
                 metric: 'availability',
-                operator: 'eq',
+                operator: '==',
                 threshold: true,
                 severity: 'critical',
                 onFailStatus: 'DOWN'
@@ -1083,7 +1083,7 @@
               {
                 rule_id: 'status_code_check',
                 metric: 'status_code',
-                operator: 'lt',
+                operator: '<',
                 threshold: 500,
                 severity: 'critical',
                 onFailStatus: 'DOWN'
@@ -1091,7 +1091,7 @@
               {
                 rule_id: 'response_time_check',
                 metric: 'response_time_ms',
-                operator: 'lt',
+                operator: '<',
                 threshold: 5000,
                 severity: 'warning',
                 onFailStatus: 'DEGRADED'
