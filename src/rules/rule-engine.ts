@@ -41,6 +41,13 @@ export function evaluateRules(
   const failedStatuses: HealthStatus[] = [];
   const failedRules: string[] = [];
 
+  // If no rules defined, default to UP if availability is true, DOWN otherwise
+  if (!rules || rules.length === 0) {
+    const availability = metrics.availability;
+    const finalStatus: HealthStatus = availability === true ? 'UP' : 'DOWN';
+    return { evaluations, finalStatus, failedRules };
+  }
+
   rules.forEach((rule) => {
     const observed = metrics[rule.metric];
     const passed = evaluateOperator(rule.operator, observed, rule.threshold);

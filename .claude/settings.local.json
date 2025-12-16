@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run build:*)",
+      "Bash(npm install:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nfeat: Implementa persistência PostgreSQL (Tarefa 1)\n\nImplementação completa de persistência PostgreSQL com fallback para MemoryStore.\n\n## Features Principais:\n- PostgresStore com connection pooling (max 20 conexões)\n- Cache em memória configurável para performance\n- Migrations automatizadas (up/down)\n- Script de seed com dados de exemplo\n- Store Factory pattern com auto-detecção (DATABASE_URL)\n- Graceful shutdown com cleanup de conexões\n- Docker Compose pronto para produção\n\n## Schema de Banco:\n- Tabela resources (catálogo)\n- Tabela health_status (status atual)\n- Tabela health_checks (histórico)\n- Tabelas para alertas (notification_channels, alert_rules, alert_history)\n- Índices otimizados para queries comuns\n- Triggers automáticos (updated_at)\n- Função de cleanup de checks antigos\n\n## Arquivos Novos:\n- migrations/001_initial_schema.sql\n- src/stores/postgres-store.ts\n- src/stores/store-factory.ts\n- src/stores/store-interface.ts\n- scripts/migrate.js\n- scripts/seed.js\n- docker-compose.yml\n- .env.example\n- ANALISE_E_PLANO.md\n- TAREFA_1_COMPLETA.md\n\n## Arquivos Modificados:\n- src/index.ts - Inicialização do store + graceful shutdown\n- src/services/health-service.ts - Uso de getStore()\n- src/worker/scheduler.ts - Uso de getStore()\n- src/stores/memory-store.ts - Implementa IHealthStore\n- src/config/index.ts - Configuração DATABASE_URL\n- package.json - Dependências pg + scripts de migration\n- README.md - Documentação completa\n\n## Como Usar:\n1. Com PostgreSQL: export DATABASE_URL=\"postgresql://...\" && npm run migrate:up\n2. Sem PostgreSQL: Usa MemoryStore automaticamente\n3. Docker Compose: docker-compose up -d && docker-compose exec rhc npm run migrate:up\n\n## Breaking Changes:\n- Nenhum! Totalmente retrocompatível.\n\n🤖 Generated with Claude Code (https://claude.com/claude-code)\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git push:*)",
+      "Bash(ssh root@72.61.52.70 \"cd /root/RHC && git status && docker ps | grep rhc\")",
+      "Bash(ssh root@72.61.52.70 \"git config --global --add safe.directory /root/RHC && cd /root/RHC && git status\")",
+      "Bash(ssh root@72.61.52.70 \"docker ps | grep rhc\")",
+      "Bash(ssh root@72.61.52.70 \"docker stop rhc && docker rm rhc\")",
+      "Bash(ssh root@72.61.52.70 \"cd /root && rm -rf RHC && git clone https://github.com/maxcardoso-git/RHC.git && cd RHC && ls -la\")",
+      "Bash(ssh root@72.61.52.70 \"cd /root/RHC && docker build -t rhc:latest .\")",
+      "Bash(git commit:*)",
+      "Bash(ssh root@72.61.52.70 \"cd /root/RHC && git pull origin master\")",
+      "Bash(ssh root@72.61.52.70 \"docker run -d --restart unless-stopped -p 32000:3000 -e INTERNAL_API_KEY=prod-key -e DEFAULT_LOCALE=pt-BR --name rhc rhc:latest\")",
+      "Bash(ssh:*)",
+      "Bash(curl:*)",
+      "Bash(ls:*)",
+      "Bash(ssh root@72.61.52.70 \"cd /root/RHC && git pull origin master && docker stop rhc && docker rm rhc && docker build -q -t rhc:latest . && docker run -d --restart unless-stopped -p 32000:3000 -e INTERNAL_API_KEY=prod-key -e DEFAULT_LOCALE=pt-BR --name rhc rhc:latest\")",
+      "Bash(ssh root@72.61.52.70 \"docker logs rhc 2>&1 | grep -i ''store\\|postgres\\|database'' | tail -10\")",
+      "Bash(ssh root@72.61.52.70 \"docker logs rhc 2>&1 | tail -30\")",
+      "Bash(ssh root@72.61.52.70:*)",
+      "Bash(ssh root@72.61.52.70 \"docker logs rhc 2>&1 | grep -E ''error|Error|ERROR|failed|Failed'' | tail -20\")",
+      "Bash(wait:*)"
+    ]
+  }
+}

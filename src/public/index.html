@@ -1070,7 +1070,33 @@
               type: 'INTERVAL',
               value: 'PT30S'
             },
-            timeout: 'PT5S'
+            timeout: 'PT5S',
+            rules: [
+              {
+                rule_id: 'availability_check',
+                metric: 'availability',
+                operator: 'eq',
+                threshold: true,
+                severity: 'critical',
+                onFailStatus: 'DOWN'
+              },
+              {
+                rule_id: 'status_code_check',
+                metric: 'status_code',
+                operator: 'lt',
+                threshold: 500,
+                severity: 'critical',
+                onFailStatus: 'DOWN'
+              },
+              {
+                rule_id: 'response_time_check',
+                metric: 'response_time_ms',
+                operator: 'lt',
+                threshold: 5000,
+                severity: 'warning',
+                onFailStatus: 'DEGRADED'
+              }
+            ]
           }
         };
 
