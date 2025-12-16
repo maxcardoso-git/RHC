@@ -81,6 +81,19 @@ export interface HealthPolicy {
   tags?: string[];
 }
 
+export type RestartType = 'docker' | 'docker-compose' | 'ssh' | 'webhook';
+
+export interface RestartConfig {
+  type: RestartType;
+  container_name?: string;      // for docker type
+  service_name?: string;        // for docker-compose type
+  compose_file?: string;        // for docker-compose type
+  ssh_command?: string;         // for ssh type
+  webhook_url?: string;         // for webhook type
+  webhook_method?: 'POST' | 'PUT';
+  webhook_headers?: Record<string, string>;
+}
+
 export interface ResourceDescriptor {
   id: string;
   name: string;
@@ -95,6 +108,7 @@ export interface ResourceDescriptor {
   connection?: Record<string, unknown>;
   config?: Record<string, unknown>;
   policy?: HealthPolicy;
+  restart_config?: RestartConfig;
 }
 
 export interface ResourceHealthStatus {

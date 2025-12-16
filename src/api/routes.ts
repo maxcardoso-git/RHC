@@ -6,6 +6,7 @@ import { HealthService } from '../services/health-service.js';
 import { ResourceRegistryClient } from '../services/resource-registry-client.js';
 import { CatalogService } from '../services/catalog-service.js';
 import { memoryStore } from '../stores/memory-store.js';
+import { dockerService } from '../services/docker-service.js';
 
 function pickUserLocale(header?: string | string[]): Locale | undefined {
   if (!header) return undefined;
@@ -170,5 +171,76 @@ export async function registerRoutes(
       return;
     }
     reply.code(204).send();
+  });
+
+  // Restart service
+  app.post(`${base}/restart/:resource_id`, async (request, reply) => {
+    const resourceId = (request.params as { resource_id: string }).resource_id;
+
+    // Check if Docker is available
+    const dockerAvailable = await dockerService.isAvailable();
+    if (!dockerAvailable) {
+      reply.code(503).send({
+        code: 'DOCKER_UNAVAILABLE',
+        message: 'Docker socket not available. Ensure /var/run/docker.sock is mounted.'
+      });
+      return;
+    }
+
+    // Get resource from catalog
+    const resource = deps.catalog.get(resourceId);
+    if (!resource) {
+      reply.code(404).send({ code: 'RESOURCE_NOT_FOUND' });
+      return;
+    }
+
+    // Check if restart is configured
+    if (!resource.restart_config) {
+      reply.code(400).send({
+        code: 'RESTART_NOT_CONFIGURED',
+        message: `Resource '${resource.name}' does not have restart configuration`
+      });
+      return;
+    }
+
+    // Perform restart
+    const result = await dockerService.restartContainer(resource.restart_config);
+
+    if (result.success) {
+      // Trigger a health check after restart
+      setTimeout(async () => {
+        try {
+          await deps.healthService.runCheck(resourceId, 'MANUAL', resource);
+        } catch {
+          // ignore errors
+        }
+      }, 5000);
+
+      reply.send({
+        success: true,
+        resource_id: resourceId,
+        container_name: result.container_name,
+        message: result.message,
+        duration_ms: result.duration_ms
+      });
+    } else {
+      reply.code(500).send({
+        code: 'RESTART_FAILED',
+        resource_id: resourceId,
+        message: result.message,
+        duration_ms: result.duration_ms
+      });
+    }
+  });
+
+  // Check Docker availability
+  app.get(`${base}/docker/status`, async (_request, reply) => {
+    const available = await dockerService.isAvailable();
+    if (available) {
+      const containers = await dockerService.listContainers();
+      reply.send({ available: true, containers });
+    } else {
+      reply.send({ available: false, message: 'Docker socket not available' });
+    }
   });
 }

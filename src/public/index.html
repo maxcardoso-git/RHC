@@ -1102,7 +1102,9 @@
         return;
       }
 
-      tbody.innerHTML = items.map(item => `
+      tbody.innerHTML = items.map(item => {
+        const showRestartBtn = item.current_status === 'DOWN';
+        return `
         <tr onclick="showDetail('${item.resource_id}')">
           <td><strong>${item.resource_name}</strong><br/><small style="color: var(--text-muted)">${item.resource_id}</small></td>
           <td>${item.resource_type}<br/><small style="color: var(--text-muted)">${item.resource_subtype || '-'}</small></td>
@@ -1111,19 +1113,53 @@
           <td>${new Date(item.last_check_at).toLocaleString('pt-BR')}</td>
           <td>
             <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+              ${showRestartBtn ? `<button onclick="event.stopPropagation(); restartService('${item.resource_id}', '${item.resource_name}')" style="padding: 0.5rem 0.75rem; font-size: 0.75rem; background: linear-gradient(135deg, #f59e0b, #d97706);">🔃 Reiniciar</button>` : ''}
               <button onclick="event.stopPropagation(); triggerCheck('${item.resource_id}')" class="secondary" style="padding: 0.5rem 0.75rem; font-size: 0.75rem;">🔄 Verificar</button>
               <button onclick="event.stopPropagation(); editResourceFromTable('${item.resource_id}')" class="secondary" style="padding: 0.5rem 0.75rem; font-size: 0.75rem;">✏️ Editar</button>
               <button onclick="event.stopPropagation(); deleteResourceFromTable('${item.resource_id}', '${item.resource_name}')" class="danger" style="padding: 0.5rem 0.75rem; font-size: 0.75rem;">🗑️ Excluir</button>
             </div>
           </td>
         </tr>
-      `).join('');
+      `}).join('');
     }
 
     async function triggerCheck(resourceId) {
       await fetch(`${API_BASE}/check/${resourceId}`, { method: 'POST' });
       showToast('success', 'Verificação iniciada', 'O recurso será verificado em breve');
       setTimeout(refreshStatus, 2000);
+    }
+
+    async function restartService(resourceId, resourceName) {
+      const confirmed = await showConfirm(
+        `Reiniciar "${resourceName}"?`,
+        'O container Docker será reiniciado. O serviço ficará indisponível por alguns segundos.'
+      );
+
+      if (!confirmed) return;
+
+      try {
+        showToast('warning', 'Reiniciando...', `Aguarde enquanto ${resourceName} é reiniciado`);
+
+        const response = await fetch(`${API_BASE}/restart/${resourceId}`, { method: 'POST' });
+        const data = await response.json();
+
+        if (response.ok) {
+          showToast('success', 'Serviço reiniciado!', data.message);
+          // Aguarda 8 segundos para o serviço subir e faz verificação
+          setTimeout(refreshStatus, 8000);
+        } else {
+          if (data.code === 'DOCKER_UNAVAILABLE') {
+            showToast('error', 'Docker indisponível', 'O socket Docker não está montado no container RHC');
+          } else if (data.code === 'RESTART_NOT_CONFIGURED') {
+            showToast('error', 'Não configurado', 'Este recurso não possui configuração de restart');
+          } else {
+            showToast('error', 'Erro ao reiniciar', data.message);
+          }
+        }
+      } catch (error) {
+        console.error('Erro ao reiniciar:', error);
+        showToast('error', 'Erro ao reiniciar', error.message);
+      }
     }
 
     async function editResourceFromTable(resourceId) {
