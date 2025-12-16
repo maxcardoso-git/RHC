@@ -802,6 +802,261 @@
     ::-webkit-scrollbar-thumb:hover {
       background: var(--border-hover);
     }
+
+    /* Help Modal */
+    .help-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(8px);
+      display: none;
+      align-items: flex-start;
+      justify-content: center;
+      z-index: 10000;
+      overflow-y: auto;
+      padding: 2rem;
+    }
+
+    .help-overlay.show {
+      display: flex;
+    }
+
+    .help-modal {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      max-width: 900px;
+      width: 100%;
+      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+      animation: slideUp 0.3s ease;
+      margin: auto;
+    }
+
+    .help-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.5rem 2rem;
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(135deg, rgba(6, 182, 212, 0.1), rgba(139, 92, 246, 0.1));
+      border-radius: 20px 20px 0 0;
+    }
+
+    .help-header h2 {
+      font-size: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .help-header h2::before {
+      display: none;
+    }
+
+    .help-close {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      font-size: 1.25rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .help-close:hover {
+      background: var(--danger);
+      color: white;
+      border-color: var(--danger);
+      transform: scale(1.05);
+    }
+
+    .help-content {
+      padding: 2rem;
+      max-height: 70vh;
+      overflow-y: auto;
+    }
+
+    .help-section {
+      margin-bottom: 2rem;
+    }
+
+    .help-section:last-child {
+      margin-bottom: 0;
+    }
+
+    .help-section h3 {
+      font-size: 1.125rem;
+      color: var(--accent-cyan);
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .help-section p {
+      color: var(--text-secondary);
+      margin-bottom: 0.75rem;
+      line-height: 1.7;
+    }
+
+    .help-section ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .help-section li {
+      padding: 0.5rem 0;
+      padding-left: 1.5rem;
+      position: relative;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    .help-section li::before {
+      content: '•';
+      position: absolute;
+      left: 0;
+      color: var(--accent-cyan);
+      font-weight: bold;
+    }
+
+    .help-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .help-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1rem;
+    }
+
+    .help-card h4 {
+      font-size: 0.875rem;
+      color: var(--text-primary);
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .help-card p {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin: 0;
+    }
+
+    .help-status-demo {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .help-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .help-badge.up {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--success);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .help-badge.degraded {
+      background: rgba(245, 158, 11, 0.15);
+      color: var(--warning);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+
+    .help-badge.down {
+      background: rgba(239, 68, 68, 0.15);
+      color: var(--danger);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    .help-warning {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      border-radius: 10px;
+      padding: 1rem;
+      margin-top: 1rem;
+    }
+
+    .help-warning h4 {
+      color: var(--danger);
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .help-warning ul {
+      margin-top: 0.5rem;
+    }
+
+    .help-warning li {
+      color: var(--text-secondary);
+      font-size: 0.875rem;
+    }
+
+    .help-info {
+      background: rgba(6, 182, 212, 0.1);
+      border: 1px solid rgba(6, 182, 212, 0.3);
+      border-radius: 10px;
+      padding: 1rem;
+      margin-top: 1rem;
+    }
+
+    .help-info h4 {
+      color: var(--accent-cyan);
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .help-btn {
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      font-weight: 600;
+      font-size: 0.875rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .help-btn:hover {
+      background: var(--bg-hover);
+      color: var(--text-primary);
+      border-color: var(--accent-cyan);
+      transform: translateY(-2px);
+    }
   </style>
 </head>
 <body>
@@ -825,6 +1080,162 @@
     </div>
   </div>
 
+  <!-- Help Modal -->
+  <div class="help-overlay" id="helpOverlay" onclick="if(event.target === this) closeHelp()">
+    <div class="help-modal">
+      <div class="help-header">
+        <h2>📖 Como Funciona o RHC</h2>
+        <button class="help-close" onclick="closeHelp()">✕</button>
+      </div>
+      <div class="help-content">
+
+        <div class="help-section">
+          <h3>🎯 O que é o RHC?</h3>
+          <p>O <strong>Resource Health Checker (RHC)</strong> é um sistema de monitoramento de saúde de recursos e serviços. Ele verifica periodicamente se seus serviços estão funcionando corretamente e exibe o status em tempo real.</p>
+          <p>Ideal para equipes de NOC (Network Operations Center), DevOps e SRE que precisam monitorar múltiplos serviços de forma centralizada.</p>
+        </div>
+
+        <div class="help-section">
+          <h3>📊 Status dos Recursos</h3>
+          <p>Cada recurso pode ter um dos três status:</p>
+          <div class="help-status-demo">
+            <div class="help-badge up">🟢 UP - Funcionando normalmente</div>
+            <div class="help-badge degraded">🟡 DEGRADED - Com problemas de performance</div>
+            <div class="help-badge down">🔴 DOWN - Indisponível</div>
+          </div>
+          <p style="margin-top: 1rem;">O status é determinado por regras configuradas para cada recurso, como tempo de resposta, código HTTP e disponibilidade.</p>
+        </div>
+
+        <div class="help-section">
+          <h3>✅ O que o RHC FAZ</h3>
+          <div class="help-grid">
+            <div class="help-card">
+              <h4>🔄 Verificação Automática</h4>
+              <p>Verifica cada recurso a cada 30 segundos automaticamente</p>
+            </div>
+            <div class="help-card">
+              <h4>🌐 Health Check HTTP</h4>
+              <p>Faz requisições HTTP para endpoints de health check</p>
+            </div>
+            <div class="help-card">
+              <h4>📈 Histórico</h4>
+              <p>Mantém histórico das últimas verificações de cada recurso</p>
+            </div>
+            <div class="help-card">
+              <h4>🔃 Reiniciar Containers</h4>
+              <p>Permite reiniciar containers Docker quando estão DOWN</p>
+            </div>
+            <div class="help-card">
+              <h4>🏷️ Filtros</h4>
+              <p>Filtra por status, tipo, ambiente e aplicação</p>
+            </div>
+            <div class="help-card">
+              <h4>⚙️ Gerenciar Catálogo</h4>
+              <p>Adiciona, edita e remove recursos do monitoramento</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="help-section">
+          <h3>❌ O que o RHC NÃO FAZ</h3>
+          <div class="help-warning">
+            <h4>⚠️ Limitações importantes</h4>
+            <ul>
+              <li><strong>Não envia alertas/notificações</strong> - Não envia emails, SMS, Slack ou qualquer tipo de alerta automático</li>
+              <li><strong>Não monitora métricas de performance</strong> - Não coleta CPU, memória, disco ou outras métricas de sistema</li>
+              <li><strong>Não faz auto-healing</strong> - Não reinicia serviços automaticamente (apenas manual)</li>
+              <li><strong>Não monitora logs</strong> - Não analisa logs de aplicação ou erros</li>
+              <li><strong>Não faz APM</strong> - Não rastreia transações ou traces distribuídos</li>
+              <li><strong>Não persiste dados entre reinícios</strong> - O catálogo é armazenado em memória (sem banco de dados)</li>
+              <li><strong>Não suporta autenticação</strong> - Não há login ou controle de acesso</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="help-section">
+          <h3>🛠️ Ações Disponíveis</h3>
+          <ul>
+            <li><strong>🔄 Verificar:</strong> Dispara uma verificação manual imediata do recurso</li>
+            <li><strong>🔃 Reiniciar:</strong> Reinicia o container Docker do serviço (aparece apenas quando DOWN)</li>
+            <li><strong>✏️ Editar:</strong> Modifica as configurações do recurso no catálogo</li>
+            <li><strong>🗑️ Excluir:</strong> Remove o recurso do monitoramento</li>
+          </ul>
+          <div class="help-info">
+            <h4>💡 Dica</h4>
+            <p>Clique em qualquer linha da tabela para ver detalhes do recurso, incluindo falhas consecutivas e última verificação bem-sucedida.</p>
+          </div>
+        </div>
+
+        <div class="help-section">
+          <h3>📁 Tipos de Recursos Suportados</h3>
+          <div class="help-grid">
+            <div class="help-card">
+              <h4>🌐 HTTP Service</h4>
+              <p>APIs REST, websites, microsserviços</p>
+            </div>
+            <div class="help-card">
+              <h4>🗄️ Database</h4>
+              <p>PostgreSQL, MongoDB, MySQL</p>
+            </div>
+            <div class="help-card">
+              <h4>📦 Cache/Queue</h4>
+              <p>Redis, RabbitMQ, Kafka</p>
+            </div>
+            <div class="help-card">
+              <h4>🤖 LLM Provider</h4>
+              <p>OpenAI, Anthropic, Gemini</p>
+            </div>
+            <div class="help-card">
+              <h4>🔢 Vector DB</h4>
+              <p>Pinecone, Weaviate, Qdrant</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="help-section">
+          <h3>⚡ Configuração de Health Check</h3>
+          <p>Cada recurso é verificado usando as seguintes regras padrão:</p>
+          <ul>
+            <li><strong>Disponibilidade:</strong> O endpoint deve responder (connection ok)</li>
+            <li><strong>Status Code:</strong> Deve retornar HTTP 200 (configurável)</li>
+            <li><strong>Timeout:</strong> Máximo de 5 segundos para responder</li>
+            <li><strong>Intervalo:</strong> Verificação a cada 30 segundos</li>
+          </ul>
+        </div>
+
+        <div class="help-section">
+          <h3>🐳 Funcionalidade de Restart</h3>
+          <p>O RHC pode reiniciar containers Docker diretamente. Para isso funcionar:</p>
+          <ul>
+            <li>O container RHC deve ter o Docker socket montado (<code>-v /var/run/docker.sock:/var/run/docker.sock</code>)</li>
+            <li>O recurso deve ter <code>restart_config</code> configurado com o nome do container</li>
+            <li>O botão "Reiniciar" só aparece quando o serviço está DOWN</li>
+          </ul>
+          <div class="help-info">
+            <h4>🔒 Segurança</h4>
+            <p>O restart sempre pede confirmação antes de executar. O container é reiniciado graciosamente (SIGTERM + 10s timeout).</p>
+          </div>
+        </div>
+
+        <div class="help-section">
+          <h3>📡 API REST</h3>
+          <p>O RHC expõe uma API REST completa em <code>/api/v1/resource-health/</code>:</p>
+          <ul>
+            <li><code>GET /status</code> - Lista status de todos os recursos</li>
+            <li><code>GET /status/:id</code> - Status de um recurso específico</li>
+            <li><code>POST /check/:id</code> - Dispara verificação manual</li>
+            <li><code>POST /restart/:id</code> - Reinicia container do recurso</li>
+            <li><code>GET /catalog</code> - Lista recursos do catálogo</li>
+            <li><code>POST /catalog</code> - Adiciona recurso ao catálogo</li>
+            <li><code>PATCH /catalog/:id</code> - Atualiza recurso</li>
+            <li><code>DELETE /catalog/:id</code> - Remove recurso</li>
+          </ul>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
   <header>
     <div class="header-left">
       <div class="logo-container">
@@ -834,6 +1245,7 @@
       <span class="status-pill" id="resourceCount">NOC Monitor</span>
     </div>
     <div class="header-right">
+      <button class="help-btn" onclick="showHelp()">❓ How it works</button>
       <a href="/ui/dashboard.html" class="nav-link">📊 Dashboard NOC</a>
     </div>
   </header>
@@ -991,6 +1403,24 @@
     const API_BASE = '/api/v1/resource-health';
     let currentPage = 0;
     let currentData = [];
+
+    // Help modal functions
+    function showHelp() {
+      document.getElementById('helpOverlay').classList.add('show');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeHelp() {
+      document.getElementById('helpOverlay').classList.remove('show');
+      document.body.style.overflow = '';
+    }
+
+    // Close help modal with Escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeHelp();
+      }
+    });
 
     // Toast notification system
     function showToast(type, title, message) {

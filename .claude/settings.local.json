@@ -39,7 +39,8 @@
       "Bash(/tmp/register-all-complete.sh)",
       "Bash(/tmp/disable-databases.sh)",
       "Bash(/tmp/register-http-services-only.sh:*)",
-      "Bash(git push)"
+      "Bash(git push)",
+      "Bash(/tmp/register-services-with-restart.sh)"
     ]
   }
 }
