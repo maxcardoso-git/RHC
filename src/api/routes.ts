@@ -75,7 +75,8 @@ export async function registerRoutes(
       status: query.status as any,
       tag: query.tag,
       owner: query.owner,
-      env: query.env
+      env: query.env,
+      app: query.app
     });
     const limit = query.limit ? parseInt(query.limit, 10) : 20;
     const offset = query.offset ? parseInt(query.offset, 10) : 0;
