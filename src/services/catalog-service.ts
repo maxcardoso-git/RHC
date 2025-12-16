@@ -74,6 +74,7 @@ export class CatalogService {
       subtype: entry.subtype ?? (existingIdx >= 0 ? this.cache[existingIdx].subtype : undefined),
       enabled: entry.enabled ?? (existingIdx >= 0 ? this.cache[existingIdx].enabled : true),
       env: entry.env ?? (existingIdx >= 0 ? this.cache[existingIdx].env : undefined),
+      app: entry.app ?? (existingIdx >= 0 ? this.cache[existingIdx].app : undefined),
       tags: entry.tags ?? (existingIdx >= 0 ? this.cache[existingIdx].tags : []),
       connection: entry.connection ?? (existingIdx >= 0 ? this.cache[existingIdx].connection : undefined),
       config: entry.config ?? (existingIdx >= 0 ? this.cache[existingIdx].config : undefined),
