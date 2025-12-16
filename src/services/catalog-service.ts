@@ -81,6 +81,7 @@ export class CatalogService {
       policy: entry.policy ?? (existingIdx >= 0 ? this.cache[existingIdx].policy : undefined),
       owner: entry.owner ?? (existingIdx >= 0 ? this.cache[existingIdx].owner : undefined),
       criticality: entry.criticality ?? (existingIdx >= 0 ? this.cache[existingIdx].criticality : undefined),
+      restart_config: entry.restart_config ?? (existingIdx >= 0 ? this.cache[existingIdx].restart_config : undefined),
       source: source,
       synced_at: source === 'registry_snapshot' ? now : this.cache[existingIdx]?.synced_at,
       updated_at: now
