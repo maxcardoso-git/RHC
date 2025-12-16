@@ -784,6 +784,10 @@
           </select>
         </div>
         <div class="form-group">
+          <label>Aplicação</label>
+          <input type="text" id="formApp" placeholder="ex: RHC, RAG Layer, IPM" />
+        </div>
+        <div class="form-group">
           <label>Endpoint</label>
           <input type="text" id="formEndpoint" placeholder="http://localhost:5432/health" />
         </div>
@@ -914,6 +918,7 @@
         document.getElementById('formName').value = resource.name;
         document.getElementById('formType').value = resource.type;
         document.getElementById('formEnv').value = resource.env || '';
+        document.getElementById('formApp').value = resource.app || '';
         document.getElementById('formEndpoint').value = resource.connection?.endpoint || '';
 
         // Mostrar o formulário
@@ -1039,6 +1044,7 @@
       document.getElementById('formName').value = '';
       document.getElementById('formType').value = '';
       document.getElementById('formEnv').value = '';
+      document.getElementById('formApp').value = '';
       document.getElementById('formEndpoint').value = '';
 
       // Mostrar o formulário
@@ -1060,6 +1066,7 @@
           name: document.getElementById('formName').value,
           type: document.getElementById('formType').value,
           env: document.getElementById('formEnv').value,
+          app: document.getElementById('formApp').value,
           enabled: true,
           connection: {
             endpoint: document.getElementById('formEndpoint').value
