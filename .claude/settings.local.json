@@ -35,7 +35,10 @@
       "Bash(/tmp/register-all-services.sh:*)",
       "Bash(npx tsc:*)",
       "Bash(echo \"Build status: $?\")",
-      "Bash(/tmp/register-services-correct.sh)"
+      "Bash(/tmp/register-services-correct.sh)",
+      "Bash(/tmp/register-all-complete.sh)",
+      "Bash(/tmp/disable-databases.sh)",
+      "Bash(/tmp/register-http-services-only.sh:*)"
     ]
   }
 }
